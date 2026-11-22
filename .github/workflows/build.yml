@@ -31,7 +31,7 @@ jobs:
           sed -i 's/^(\s*webGLTemplate:).*$/\1 APPLICATION:Default/' project/ProjectSettings/ProjectSettings.asset
 
       - name: Setup Unity Editor
-        uses: buildalon/unity-setup@¾3
+        uses: buildalon/unity-setup@v3
         with:
           version-file: 'None'
           unity-version: '2020.3.40f1 (ba48d4efcef1)'
