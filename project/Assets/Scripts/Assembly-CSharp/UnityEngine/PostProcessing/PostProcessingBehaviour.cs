@@ -69,7 +69,7 @@ namespace UnityEngine.PostProcessing
 
 		private List<PostProcessingComponentBase> m_ComponentsToDisable = new List<PostProcessingComponentBase>();
 
-		private void OnEnable()
+		private void OnEnable() { base.enabled = false; return; } private void _origOnEnable()
 		{
 			m_CommandBuffers = new Dictionary<Type, KeyValuePair<CameraEvent, CommandBuffer>>();
 			m_MaterialFactory = new MaterialFactory();
