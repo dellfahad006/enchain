@@ -50,7 +50,7 @@ jobs:
         working-directory: project
         run: |
           npm install -g openupm-cli
-          openupm add com.virtualmaker.buildalon
+          openupm add --force com.virtualmaker.buildalon
 
       - name: Cache Unity Library
         uses: actions/cache@v4
