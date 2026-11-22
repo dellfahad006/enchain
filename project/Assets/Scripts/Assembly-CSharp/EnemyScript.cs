@@ -66,6 +66,48 @@ public class EnemyScript : MonoBehaviour
 
 	private Animation anim;
 
+	// Project recovery renamed duplicate clip names to Idle_0, Idle_1, ...
+	// Register each such clip again under its original name so the code finds it.
+	private void AliasSuffixedClips()
+	{
+		if (anim == null)
+		{
+			return;
+		}
+		List<AnimationState> states = new List<AnimationState>();
+		foreach (AnimationState state in anim)
+		{
+			states.Add(state);
+		}
+		foreach (AnimationState state2 in states)
+		{
+			string stateName = state2.name;
+			int underscore = stateName.LastIndexOf('_');
+			if (underscore <= 0 || underscore == stateName.Length - 1)
+			{
+				continue;
+			}
+			bool allDigits = true;
+			for (int i = underscore + 1; i < stateName.Length; i++)
+			{
+				if (!char.IsDigit(stateName[i]))
+				{
+					allDigits = false;
+					break;
+				}
+			}
+			if (!allDigits)
+			{
+				continue;
+			}
+			string baseName = stateName.Substring(0, underscore);
+			if (anim.GetClip(baseName) == null && state2.clip != null)
+			{
+				anim.AddClip(state2.clip, baseName);
+			}
+		}
+	}
+
 	private bool HasClip(string clipName)
 	{
 		return anim != null && anim.GetClip(clipName) != null;
@@ -113,6 +155,7 @@ public class EnemyScript : MonoBehaviour
 		if ((bool)GetComponentInChildren<Animation>())
 		{
 			anim = GetComponentInChildren<Animation>();
+			AliasSuffixedClips();
 			if (HasClip(animStates[0])) { anim[animStates[0]].speed = Random.Range(0.95f, 1.05f); }
 			if ((bool)mixingBone)
 			{
