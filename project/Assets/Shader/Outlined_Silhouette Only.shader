@@ -1,46 +1,50 @@
 Shader "Outlined/Silhouette Only" {
-	Properties {
-		_OutlineColor ("Outline Color", Vector) = (0,0,0,1)
-		_Outline ("Outline width", Range(0, 0.1)) = 0.005
-	}
-	//DummyShaderTextExporter
-	SubShader{
-		Tags { "RenderType" = "Opaque" }
-		LOD 200
+    Properties {
+        _OutlineColor ("Outline Color", Color) = (0,0,0,1)
+        _Outline ("Outline width", Range(0, 0.1)) = 0.005
+    }
+    SubShader {
+        Tags { "Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent" }
+        Pass {
+            Name "OUTLINE"
+            Cull Front
+            ZWrite On
+            ColorMask RGB
+            Blend SrcAlpha OneMinusSrcAlpha
 
-		Pass
-		{
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "UnityCG.cginc"
 
-			float4x4 unity_ObjectToWorld;
-			float4x4 unity_MatrixVP;
+            float _Outline;
+            fixed4 _OutlineColor;
 
-			struct Vertex_Stage_Input
-			{
-				float4 pos : POSITION;
-			};
+            struct appdata {
+                float4 vertex : POSITION;
+                float3 normal : NORMAL;
+            };
 
-			struct Vertex_Stage_Output
-			{
-				float4 pos : SV_POSITION;
-			};
+            struct v2f {
+                float4 pos : SV_POSITION;
+                float4 color : COLOR;
+            };
 
-			Vertex_Stage_Output vert(Vertex_Stage_Input input)
-			{
-				Vertex_Stage_Output output;
-				output.pos = mul(unity_MatrixVP, mul(unity_ObjectToWorld, input.pos));
-				return output;
-			}
+            v2f vert(appdata v) {
+                v2f o;
+                o.pos = UnityObjectToClipPos(v.vertex);
+                float3 norm = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, v.normal));
+                float2 offset = TransformViewToProjection(norm.xy);
+                o.pos.xy += offset * o.pos.z * _Outline;
+                o.color = _OutlineColor;
+                return o;
+            }
 
-			float4 frag(Vertex_Stage_Output input) : SV_TARGET
-			{
-				return float4(1.0, 1.0, 1.0, 1.0); // RGBA
-			}
-
-			ENDHLSL
-		}
-	}
-	Fallback "Diffuse"
+            fixed4 frag(v2f i) : SV_Target {
+                return i.color;
+            }
+            ENDCG
+        }
+    }
+    Fallback "Diffuse"
 }
