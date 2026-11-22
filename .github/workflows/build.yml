@@ -28,7 +28,7 @@ jobs:
 
       - name: Set WebGL template
         run: |
-          sed -i 's/^(\s*webGLTemplate:).*$/\1 APPLICATION:Default/' project/ProjectSettings/ProjectSettings.asset
+          sed -i -E 's/^(\s*webGLTemplate:).*$/\1 APPLICATION:Default/' project/ProjectSettings/ProjectSettings.asset
 
       - name: Setup Unity Editor
         uses: buildalon/unity-setup@v3
