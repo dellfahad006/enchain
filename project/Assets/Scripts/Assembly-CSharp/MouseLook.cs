@@ -1,0 +1,86 @@
+using System;
+using UnityEngine;
+
+[AddComponentMenu("Camera-Control/Mouse Look")]
+public class MouseLook : MonoBehaviour
+{
+	public enum RotationAxes
+	{
+		MouseXAndY = 0,
+		MouseX = 1,
+		MouseY = 2
+	}
+
+	public RotationAxes axes;
+
+	public float sensitivityX = 15f;
+
+	public float sensitivityY = 15f;
+
+	public float minimumX = -360f;
+
+	public float maximumX = 360f;
+
+	public float minimumY = -60f;
+
+	public float maximumY = 60f;
+
+	private float rotationX;
+
+	private float rotationY;
+
+	private Quaternion originalRotation;
+
+	private void Update()
+	{
+		if (!GameManager.instance.gamePaused)
+		{
+			if (axes == RotationAxes.MouseXAndY)
+			{
+				rotationX += Input.GetAxis("Mouse X") * sensitivityX;
+				rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
+				rotationX = ClampAngle(rotationX, minimumX, maximumX);
+				rotationY = ClampAngle(rotationY, minimumY, maximumY);
+				Quaternion quaternion = Quaternion.AxisAngle(Vector3.up, (float)Math.PI / 180f * rotationX);
+				Quaternion quaternion2 = Quaternion.AxisAngle(Vector3.left, (float)Math.PI / 180f * rotationY);
+				base.transform.localRotation = originalRotation * quaternion * quaternion2;
+			}
+			else if (axes == RotationAxes.MouseX)
+			{
+				rotationX += Input.GetAxis("Mouse X") * sensitivityX;
+				rotationX = ClampAngle(rotationX, minimumX, maximumX);
+				Quaternion quaternion3 = Quaternion.AxisAngle(Vector3.up, (float)Math.PI / 180f * rotationX);
+				base.transform.localRotation = originalRotation * quaternion3;
+			}
+			else
+			{
+				rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
+				rotationY = ClampAngle(rotationY, minimumY, maximumY);
+				Quaternion quaternion4 = Quaternion.AxisAngle(Vector3.left, (float)Math.PI / 180f * rotationY);
+				base.transform.localRotation = originalRotation * quaternion4;
+			}
+		}
+	}
+
+	private void Start()
+	{
+		if ((bool)GetComponent<Rigidbody>())
+		{
+			GetComponent<Rigidbody>().freezeRotation = true;
+		}
+		originalRotation = base.transform.localRotation;
+	}
+
+	public static float ClampAngle(float angle, float min, float max)
+	{
+		if (angle < -360f)
+		{
+			angle += 360f;
+		}
+		if (angle > 360f)
+		{
+			angle -= 360f;
+		}
+		return Mathf.Clamp(angle, min, max);
+	}
+}

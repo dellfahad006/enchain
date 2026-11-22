@@ -1,0 +1,779 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1120 &112000000
+LightingDataAsset:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: LightingData
+  m_Scene: {fileID: 102900000, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 3}
+  m_Lightmaps:
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: a19a2e7b23258a44fbe007444d2bb2d1, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 49bbd9da4ac2d3e478e4fa363dc60081, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 6833f3be688eeea428368cd91c24872c, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 27efa728be079aa43adc729e203c7072, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: ead25089928029946911cfee15a82e72, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 7f5ccb177f49a9244b278b56ab234f1e, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 74546ca261e386b4896083ad015976cd, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 249aee1bfeee6384cb0b2e33a2be716c, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 944bd4fb069e75446af45b0e0d841823, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 64a0305eacd492b429e58a2cab0ca245, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 0c10ed8ebb91b814b92c43201c587543, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: c9d44ec7cfb0364409f922d86eb9e5ce, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 593f954a2753ffa428081d2c3b429d83, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 28d9d51adddfe08428eacfe780d124da, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: bcab697116a750f4e8393b47d5296311, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 0e1b409a5ea244d459f156286db1e437, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 8cb808a7ebef57e4798c2eb2bb85879c, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 11541d133ef02664687cef2cb95fc6de, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 5c4debda9d95ea84abffd8b69a44da3f, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 545a7563db3dbfa4583c72a1d8b3b3ad, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 53ccf37a999eedc4e8b66c18e090fa11, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: ae860cfcb58624d4cbdc1f70f685e177, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 78ff9f12f9f7bb444875f2114a892660, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: f498045ee22b2e54ca7fe899cf4aa165, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 83a31602354601448a119fac9acae5fd, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: d932f4f32b24a2b4484ba3cb8eb127e5, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 825dd6e189e87354babb6c1d8b9d59e3, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 1b5dcb0c9bc3a8845a5edb0c96364622, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 50670c92410fdf4419c76e45fff64070, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: a4d2fb0c7f3286749b10a02b97f23fde, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 51e096f448cf1d944970cc7f520fa457, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 43d3a83376d98aa48967d776a93ae9b9, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 3d92252dd25e61441ae7c0d8ab511ff0, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: f44a5fd4ac5436f44921761ef9821b05, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 4fb74b7fd0c725d47a50571692e421aa, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: bdfa78f2b7547bf4581600ea4d6df6a2, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: ec49d434f96465d4986235cf916fc6a2, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: f19553f034a1f6443bf943dd9df48100, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: aa059db41805aea4dad68a4d6b0d30c2, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: b6a29b58794171d48a4f7a463b4774a6, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 956c3bdae205018408b1191c84f1e0a9, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: 7034a5a8b1356d046bb03118b4ceceb8, type: 2}
+  - serializedVersion: 2
+    m_Lightmap: {fileID: 2800000, guid: 37961feef6de460499f74d0339e2b941, type: 2}
+    m_DirLightmap: {fileID: 2800000, guid: 1c52f0254326a3d41a4f5572cb7f58f8, type: 2}
+    m_ShadowMask: {fileID: 2800000, guid: de3ae9bb98c75274aa1f6f9cb304905b, type: 2}
+  m_LightProbes: {fileID: 25800000, guid: 14c65b6811685004f848acccd5bdbab0, type: 2}
+  m_LightmapsMode: 1
+  m_BakedAmbientProbeInLinear:
+    sh[ 0]: 0.02820306
+    sh[ 1]: -0.027742004
+    sh[ 2]: -3.2184646E-05
+    sh[ 3]: 3.8341874E-05
+    sh[ 4]: 3.4061006E-05
+    sh[ 5]: -2.8579962E-05
+    sh[ 6]: -8.187303E-05
+    sh[ 7]: -3.665961E-05
+    sh[ 8]: -0.00023919616
+    sh[ 9]: 0.0009649666
+    sh[10]: 0.0005047229
+    sh[11]: -3.9693055E-05
+    sh[12]: 4.7299985E-05
+    sh[13]: 4.2034517E-05
+    sh[14]: -3.527265E-05
+    sh[15]: 4.5862915E-05
+    sh[16]: -4.632215E-05
+    sh[17]: 0.00014568015
+    sh[18]: 0.0012605368
+    sh[19]: 0.0006910828
+    sh[20]: -5.3084543E-05
+    sh[21]: 6.325624E-05
+    sh[22]: 5.5817316E-05
+    sh[23]: -4.684124E-05
+    sh[24]: 6.0773447E-05
+    sh[25]: -6.5154585E-05
+    sh[26]: 0.00019368636
+  m_LightmappedRendererData:
+  - uvMesh: {fileID: 4300000, guid: 5d7c3a73d9c6043449b4d78e6e24e30f, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.06396719, y: 0.06396719, z: -0.00024987184, w: 0.8044491}
+    lightmapSTDynamic: {x: 0.015625, y: 0.03125, z: 0.4375, w: 0.671875}
+  - uvMesh: {fileID: 4300000, guid: 8aa0a5186fb90b04199ea3cb1ad3cad4, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 5
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0038606, y: 1.0038606, z: 0, w: 0}
+    lightmapSTDynamic: {x: 0.140625, y: 0.2109375, z: 0.828125, w: 0}
+  - uvMesh: {fileID: 4300000, guid: 137e487a4a2a2a54789020e31d0e49a4, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 14
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0078125, y: 1.0078125, z: -0.0039367676, w: -0.0039367676}
+    lightmapSTDynamic: {x: 0.234375, y: 0.140625, z: 0.53125, w: 0.453125}
+  - uvMesh: {fileID: 4300000, guid: 7dae6d1455a16014fad6d37398ede54b, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 11
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0131956, y: 1.0131956, z: -0.0039577954, w: -0.0039577954}
+    lightmapSTDynamic: {x: 0.0859375, y: 0.1640625, z: 0, w: 0.71875}
+  - uvMesh: {fileID: 4300000, guid: 9fb442d581e5e2a4fb9705f75aece547, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 10
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0061202, y: 1.0061202, z: -0.003930157, w: -0.003930157}
+    lightmapSTDynamic: {x: 0.18750001, y: 0.1953125, z: 0.25, w: 0.671875}
+  - uvMesh: {fileID: 4300000, guid: 3fb282c31c90e294b830eccb0f5ac4f4, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 13
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.009639, y: 1.009639, z: -0.0039439024, w: -0.0039439024}
+    lightmapSTDynamic: {x: 0.2734375, y: 0.21875, z: 0.25, w: 0.453125}
+  - uvMesh: {fileID: 4300000, guid: 06d1a3f9d5f288c4c80fede6575a47c6, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.99420714, y: 0.99420714, z: -0.0038836217, w: -0.0038836217}
+    lightmapSTDynamic: {x: 0.03125, y: 0.0625, z: 0.2109375, w: 0.4609375}
+  - uvMesh: {fileID: 4300000, guid: e5153dc6fcb64354690864691946ec20, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 9
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.702713, y: 0.702713, z: -0.0027449727, w: 0.263162}
+    lightmapSTDynamic: {x: 0.0625, y: 0.078125, z: 0.078125, w: 0.828125}
+  - uvMesh: {fileID: 4300000, guid: b80d7ac6d45f9a7499f7d45bf668a893, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 6
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.008554, y: 1.008554, z: -0.003939664, w: -0.003939664}
+    lightmapSTDynamic: {x: 0.1640625, y: 0.1484375, z: 0.578125, w: 0}
+  - uvMesh: {fileID: 4300000, guid: bb5a00ca61680b04d8a3940ff1e3204e, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.47136077, y: 0.47136077, z: 0.20374285, w: 0.4903577}
+    lightmapSTDynamic: {x: 0.0390625, y: 0.046875, z: 0.7109375, w: 0.140625}
+  - uvMesh: {fileID: 4300000, guid: 9fd25151442828a4e9f43e43864c7dee, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 3
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0078125, y: 1.0078125, z: -0.0039367676, w: -0.0039367676}
+    lightmapSTDynamic: {x: 0.234375, y: 0.140625, z: 0.578125, w: 0.28125}
+  - uvMesh: {fileID: 4300000, guid: 2143998dde3417c44a39401abae67a16, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.1801529, y: 0.1801529, z: 0.7708999, w: 0.49149522}
+    lightmapSTDynamic: {x: 0.046875, y: 0.046875, z: 0.9375, w: 0.28125}
+  - uvMesh: {fileID: 4300000, guid: f320099b612ea4348afd707842008308, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 7
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.010954, y: 1.010954, z: -0.003949039, w: -0.003949039}
+    lightmapSTDynamic: {x: 0.1171875, y: 0.1328125, z: 0.578125, w: 0.1484375}
+  - uvMesh: {fileID: 4300000, guid: d246cb66a56009d48b8a0b5e26f47cb8, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 2
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.64864963, y: 0.64864963, z: -0.0025337876, w: -0.0025337876}
+    lightmapSTDynamic: {x: 0.125, y: 0.125, z: 0.8125, w: 0.28125}
+  - uvMesh: {fileID: 4300000, guid: af68d22fbd7a0a04c92ba8a799f0e59c, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 4
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0027333, y: 1.0027333, z: 0, w: 0}
+    lightmapSTDynamic: {x: 0.5703125, y: 0.453125, z: 0, w: 0}
+  - uvMesh: {fileID: 4300000, guid: c20ca6ccc718a0f40ab72ee947233bf8, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 8
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.025598, y: 1.025598, z: -0.0040062424, w: -0.0040062424}
+    lightmapSTDynamic: {x: 0.09375, y: 0.09375, z: 0.734375, w: 0}
+  - uvMesh: {fileID: 4300000, guid: 9a075067705ac7e4abbe2af5652063be, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 9
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0078125, y: 1.0078125, z: -0.0039367676, w: -0.0039367676}
+    lightmapSTDynamic: {x: 0.0703125, y: 0.0859375, z: 0.6953125, w: 0.140625}
+  - uvMesh: {fileID: 4300000, guid: 4530f862c56feaa488cb5588d58df07e, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.36897343, y: 0.36897343, z: 0.575326, w: 0.49075764}
+    lightmapSTDynamic: {x: 0.015625, y: 0.03125, z: 0.953125, w: 0.328125}
+  - uvMesh: {fileID: 4300000, guid: b72165a93eaba394d8c47a9fe4dc2876, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 12
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.4718529, y: 0.4718529, z: -0.0018431754, w: -0.0018431754}
+    lightmapSTDynamic: {x: 0.10937501, y: 0.109375, z: 0.0859375, w: 0.71875}
+  - uvMesh: {fileID: 4300000, guid: f496eb1fc2bb8ec48b7712cd46a8b6ed, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.13510416, y: 0.13510416, z: 0.050589677, w: 0.8041712}
+    lightmapSTDynamic: {x: 0.015625, y: 0.03125, z: 0.9375, w: 0.328125}
+  - uvMesh: {fileID: 4300000, guid: 730a73c00ab15eb4e8b4b9fad1c3938e, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 5
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.9349823, y: 0.9349823, z: -0.0036522746, w: 0.8190102}
+    lightmapSTDynamic: {x: 0.0703125, y: 0.0625, z: 0, w: 0.8828125}
+  - uvMesh: {fileID: 4300000, guid: eef514355f829df4aa2836c61a923297, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.31403098, y: 0.31403098, z: -0.0012266835, w: 0.49097225}
+    lightmapSTDynamic: {x: 0.0234375, y: 0.046875, z: 0.8125, w: 0.40625}
+  - uvMesh: {fileID: 4300000, guid: bca73851860d9a34fa381285d01e565f, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 0
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 1.0057184, y: 1.0057184, z: 0, w: 0}
+    lightmapSTDynamic: {x: 0.2109375, y: 0.265625, z: 0, w: 0.453125}
+  - uvMesh: {fileID: 4300000, guid: 705660f4b4fac2240adb73d3a1c49f41, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 8
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.6765271, y: 0.6765271, z: 0.5108421, w: -0.002642684}
+    lightmapSTDynamic: {x: 0.03125, y: 0.0546875, z: 0.1015625, w: 0.8515625}
+  - uvMesh: {fileID: 4300000, guid: 18b259597a8123b4383d7654c0c9f18f, type: 2}
+    terrainDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    terrainChunkDynamicUVST: {x: 0, y: 0, z: 0, w: 0}
+    lightmapIndex: 1
+    lightmapIndexDynamic: 65535
+    lightmapST: {x: 0.19093323, y: 0.19093323, z: 0.5760215, w: 0.86059374}
+    lightmapSTDynamic: {x: 0.015625, y: 0.03125, z: 0.96875, w: 0.3125}
+  m_LightmappedRendererDataIDs:
+  - targetObject: 1060
+    targetPrefab: 0
+  - targetObject: 1062
+    targetPrefab: 0
+  - targetObject: 1063
+    targetPrefab: 0
+  - targetObject: 1067
+    targetPrefab: 0
+  - targetObject: 1068
+    targetPrefab: 0
+  - targetObject: 1080
+    targetPrefab: 0
+  - targetObject: 1085
+    targetPrefab: 0
+  - targetObject: 1092
+    targetPrefab: 0
+  - targetObject: 1100
+    targetPrefab: 0
+  - targetObject: 1104
+    targetPrefab: 0
+  - targetObject: 1111
+    targetPrefab: 0
+  - targetObject: 1117
+    targetPrefab: 0
+  - targetObject: 1124
+    targetPrefab: 0
+  - targetObject: 1131
+    targetPrefab: 0
+  - targetObject: 1148
+    targetPrefab: 0
+  - targetObject: 1149
+    targetPrefab: 0
+  - targetObject: 1153
+    targetPrefab: 0
+  - targetObject: 1157
+    targetPrefab: 0
+  - targetObject: 1164
+    targetPrefab: 0
+  - targetObject: 1168
+    targetPrefab: 0
+  - targetObject: 1173
+    targetPrefab: 0
+  - targetObject: 1177
+    targetPrefab: 0
+  - targetObject: 1183
+    targetPrefab: 0
+  - targetObject: 1189
+    targetPrefab: 0
+  - targetObject: 1196
+    targetPrefab: 0
+  m_EnlightenSceneMapping:
+    m_Renderers:
+    - renderer: {fileID: 1164, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.53846157, y: 0.4827586, z: 0.42307693, w: 0}
+      systemId: 0
+      instanceHash:
+        serializedVersion: 2
+        Hash: 858f1c0d22d8aa943d8862e19fc094f8
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1173, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.34615386, y: 0.27586207, z: 0, w: 0.7241379}
+      systemId: 0
+      instanceHash:
+        serializedVersion: 2
+        Hash: 542de1f52bfd8aad979d5abe6f9193c1
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1092, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.30769232, y: 0.3448276, z: 0.3846154, w: 0.4827586}
+      systemId: 0
+      instanceHash:
+        serializedVersion: 2
+        Hash: 1b47506170ffcaf22b75f2b406091159
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1189, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.15384616, y: 0.2413793, z: 0.5, w: 0.5862069}
+      systemId: 0
+      instanceHash:
+        serializedVersion: 2
+        Hash: 7a6917368e2a595ed4a1990fe9ece36b
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1067, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.42307693, y: 0.7241379, z: 0, w: 0}
+      systemId: 0
+      instanceHash:
+        serializedVersion: 2
+        Hash: a7f0a137ab66b850bd80ff4df18057cc
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1060, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.07692308, y: 0.16, z: 0.923077, w: 0}
+      systemId: 1
+      instanceHash:
+        serializedVersion: 2
+        Hash: ce877ee93e18fd28bcbaee198db02c64
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1068, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.923077, y: 1, z: 0, w: 0}
+      systemId: 1
+      instanceHash:
+        serializedVersion: 2
+        Hash: 9e2c8b81456735e125840eb039e9ff6a
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1148, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.9864865, y: 1, z: 0, w: 0}
+      systemId: 2
+      instanceHash:
+        serializedVersion: 2
+        Hash: 7cd0c963fefec4584ac4e460f3fe565f
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1062, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 1, y: 1, z: 0, w: 0}
+      systemId: 3
+      instanceHash:
+        serializedVersion: 2
+        Hash: c44a7982ab9a1ed9cb253e5c1069f2cc
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1080, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.9722222, y: 1, z: 0, w: 0}
+      systemId: 4
+      instanceHash:
+        serializedVersion: 2
+        Hash: 340ec3ce4e33785c8332b040c197c16f
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1153, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.28125, y: 0.30555555, z: 0.46875, w: 0.5}
+      systemId: 5
+      instanceHash:
+        serializedVersion: 2
+        Hash: 6a1c2ee730f63f4758d084649becc398
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1100, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.65625, y: 0.5277778, z: 0, w: 0}
+      systemId: 5
+      instanceHash:
+        serializedVersion: 2
+        Hash: 527c8e5860e2af9601ab71792b24ed08
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1149, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.375, y: 0.33333334, z: 0.625, w: 0}
+      systemId: 5
+      instanceHash:
+        serializedVersion: 2
+        Hash: 6931710b900d527cd7fee93f137c7fb0
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1104, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.15625, y: 0.16666667, z: 0.53125, w: 0.5}
+      systemId: 5
+      instanceHash:
+        serializedVersion: 2
+        Hash: cb7c25b4a919cec499d6d98928202bfd
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1124, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.46875, y: 0.47222224, z: 0, w: 0.5277778}
+      systemId: 5
+      instanceHash:
+        serializedVersion: 2
+        Hash: 0a8dbabfb875394f53a18bfc60907a5d
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1085, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.125, y: 0.23529412, z: 0.84375, w: 0.029411765}
+      systemId: 6
+      instanceHash:
+        serializedVersion: 2
+        Hash: 7d3d095e1fb5923597e16c89e1e5ce82
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1183, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.84375, y: 1, z: 0, w: 0}
+      systemId: 6
+      instanceHash:
+        serializedVersion: 2
+        Hash: 61c88ac56b7ed582fd8e1ebc1b94b0bc
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1177, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.1875, y: 0.27272728, z: 0, w: 0.72727275}
+      systemId: 7
+      instanceHash:
+        serializedVersion: 2
+        Hash: f1a0becd0ef0d7b695419806948a8a92
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1131, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 1, y: 0.72727275, z: 0, w: 0}
+      systemId: 7
+      instanceHash:
+        serializedVersion: 2
+        Hash: 74d491e25da78dd5871cf0598921ba65
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1117, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 1, y: 0.6, z: 0, w: 0}
+      systemId: 8
+      instanceHash:
+        serializedVersion: 2
+        Hash: fa374ace344759ea97801246043ab19c
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1168, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.33333334, y: 0.4, z: 0, w: 0.6}
+      systemId: 8
+      instanceHash:
+        serializedVersion: 2
+        Hash: b07baf98745a97f70a24723580129e32
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1157, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.33333334, y: 0.4, z: 0.33333334, w: 0.6}
+      systemId: 8
+      instanceHash:
+        serializedVersion: 2
+        Hash: efb3bd03a22642e45c36b927fb076f56
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1196, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 0.33333334, y: 0.4, z: 0.6666667, w: 0.4}
+      systemId: 8
+      instanceHash:
+        serializedVersion: 2
+        Hash: b4659bcfa922bf912dbc4e40e64b4d44
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1111, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 1, y: 1, z: 0, w: 0}
+      systemId: 9
+      instanceHash:
+        serializedVersion: 2
+        Hash: 03ffcc4f644089e2ade38aa5475c7d31
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    - renderer: {fileID: 1063, guid: 247dff04c2fe00646a125e7aa9db6f65, type: 2}
+      dynamicLightmapSTInSystem: {x: 1, y: 1, z: 0, w: 0}
+      systemId: 10
+      instanceHash:
+        serializedVersion: 2
+        Hash: bdfceef9c5d9a1e00fe241441a2115e6
+      geometryHash:
+        serializedVersion: 2
+        Hash: 00000000000000000000000000000000
+    m_Systems:
+    - rendererIndex: 0
+      rendererSize: 5
+      atlasIndex: 0
+      atlasOffsetX: 0
+      atlasOffsetY: 184
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: 8e5edca583f52341b9af48030baf554c
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: 1164ff414728eb792773e6ebafe5da06
+    - rendererIndex: 5
+      rendererSize: 2
+      atlasIndex: 0
+      atlasOffsetX: 64
+      atlasOffsetY: 172
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: e26b087f57715015529b9cd1db331d02
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: 535a370b3fef217d7e7bf6eed938cc85
+    - rendererIndex: 7
+      rendererSize: 1
+      atlasIndex: 0
+      atlasOffsetX: 0
+      atlasOffsetY: 0
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: cf84792736d3a0194773e4e18d6167ed
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: fd7e4f157efbcae5b2179f3bf96d2938
+    - rendererIndex: 8
+      rendererSize: 1
+      atlasIndex: 0
+      atlasOffsetX: 212
+      atlasOffsetY: 0
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: 0ff1fd8b5349b6dc0cb7877ed783ca5a
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: bbed4cfab754207630aa81f189c2b061
+    - rendererIndex: 9
+      rendererSize: 1
+      atlasIndex: 0
+      atlasOffsetX: 64
+      atlasOffsetY: 116
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: 6f098648da57cdb111fec5a830af425a
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: a9b2f47e41b3bd7781398ba0cb82bff4
+    - rendererIndex: 10
+      rendererSize: 5
+      atlasIndex: 0
+      atlasOffsetX: 148
+      atlasOffsetY: 0
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: 56fcb2bc54dfa1a81eb5c4bd125d24b0
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: 50f4707627a2ad5026412396ad4be17f
+    - rendererIndex: 15
+      rendererSize: 2
+      atlasIndex: 0
+      atlasOffsetX: 0
+      atlasOffsetY: 116
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: 1847e6fd06d6fff0205f6b5c6f3d01fd
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: bfd3cbe34d16e62742e665f00e3c9819
+    - rendererIndex: 17
+      rendererSize: 2
+      atlasIndex: 0
+      atlasOffsetX: 208
+      atlasOffsetY: 72
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: 3af32abd0b440e1f3a32766e0a37b59e
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: 3ddc2238216bf1bd8ce980f5ac1a19e0
+    - rendererIndex: 19
+      rendererSize: 4
+      atlasIndex: 0
+      atlasOffsetX: 240
+      atlasOffsetY: 72
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: ec0bf73dab981ec7b3d519497546f8b0
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: c30dd26205a7e80c6b52bd6cdc7b2da3
+    - rendererIndex: 23
+      rendererSize: 1
+      atlasIndex: 0
+      atlasOffsetX: 148
+      atlasOffsetY: 72
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: f76b17c018a8b7f6393375a501394c32
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: d07cd96dd93382271c646e62344d468b
+    - rendererIndex: 24
+      rendererSize: 1
+      atlasIndex: 0
+      atlasOffsetX: 136
+      atlasOffsetY: 116
+      inputSystemHash:
+        serializedVersion: 2
+        Hash: 83c350f2dedc3a3d976b6e08b2fbf877
+      radiositySystemHash:
+        serializedVersion: 2
+        Hash: 5609da3a9557eecd65039dc57ec42bd5
+    m_Probesets: []
+    m_SystemAtlases:
+    - atlasSize: 256
+      atlasHash:
+        serializedVersion: 2
+        Hash: bac5502f47279b25f25757b7dd2cf4dd
+      firstSystemId: 0
+    m_TerrainChunks: []
+  m_EnlightenSceneMappingRendererIDs:
+  - targetObject: 1164
+    targetPrefab: 0
+  - targetObject: 1173
+    targetPrefab: 0
+  - targetObject: 1092
+    targetPrefab: 0
+  - targetObject: 1189
+    targetPrefab: 0
+  - targetObject: 1067
+    targetPrefab: 0
+  - targetObject: 1060
+    targetPrefab: 0
+  - targetObject: 1068
+    targetPrefab: 0
+  - targetObject: 1148
+    targetPrefab: 0
+  - targetObject: 1062
+    targetPrefab: 0
+  - targetObject: 1080
+    targetPrefab: 0
+  - targetObject: 1153
+    targetPrefab: 0
+  - targetObject: 1100
+    targetPrefab: 0
+  - targetObject: 1149
+    targetPrefab: 0
+  - targetObject: 1104
+    targetPrefab: 0
+  - targetObject: 1124
+    targetPrefab: 0
+  - targetObject: 1085
+    targetPrefab: 0
+  - targetObject: 1183
+    targetPrefab: 0
+  - targetObject: 1177
+    targetPrefab: 0
+  - targetObject: 1131
+    targetPrefab: 0
+  - targetObject: 1117
+    targetPrefab: 0
+  - targetObject: 1168
+    targetPrefab: 0
+  - targetObject: 1157
+    targetPrefab: 0
+  - targetObject: 1196
+    targetPrefab: 0
+  - targetObject: 1111
+    targetPrefab: 0
+  - targetObject: 1063
+    targetPrefab: 0
+  m_Lights:
+  - targetObject: 1484
+    targetPrefab: 0
+  - targetObject: 1485
+    targetPrefab: 0
+  - targetObject: 1486
+    targetPrefab: 0
+  - targetObject: 1487
+    targetPrefab: 0
+  m_LightBakingOutputs:
+  - serializedVersion: 2
+    probeOcclusionLightIndex: -1
+    occlusionMaskChannel: -1
+    lightmapBakeMode:
+      lightmapBakeType: 4
+      mixedLightingMode: 2
+    isBaked: 0
+  - serializedVersion: 2
+    probeOcclusionLightIndex: -1
+    occlusionMaskChannel: -1
+    lightmapBakeMode:
+      lightmapBakeType: 4
+      mixedLightingMode: 2
+    isBaked: 0
+  - serializedVersion: 2
+    probeOcclusionLightIndex: 0
+    occlusionMaskChannel: 0
+    lightmapBakeMode:
+      lightmapBakeType: 1
+      mixedLightingMode: 2
+    isBaked: 1
+  - serializedVersion: 2
+    probeOcclusionLightIndex: -1
+    occlusionMaskChannel: -1
+    lightmapBakeMode:
+      lightmapBakeType: 4
+      mixedLightingMode: 2
+    isBaked: 0
+  m_BakedReflectionProbeCubemaps:
+  - {fileID: 8900000, guid: 9008bb3729e3ee440a594c454496fde9, type: 3}
+  m_BakedReflectionProbes: []
+  m_EnlightenData: 556e69747946530000000006352e782e7800323031372e332e3066330000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  m_EnlightenDataVersion: 112

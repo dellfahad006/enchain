@@ -1,0 +1,587 @@
+using System;
+using System.Collections;
+using UnityEngine;
+
+public class PlayerScript : MonoBehaviour
+{
+	private Camera cam;
+
+	public GameObject grabber;
+
+	private Vector3 camOffsetHand = Vector3.zero;
+
+	public GameObject hookshot;
+
+	public float hsForce = 10f;
+
+	public float hsThrow = 10f;
+
+	private Vector3 hsFirePoint = Vector3.zero;
+
+	private ConfigurableJoint cjA;
+
+	private ConfigurableJoint cjB;
+
+	public float maxRange = 15f;
+
+	[NonSerialized]
+	public float perfMult = 1f;
+
+	private bool hooked;
+
+	private Transform lastHL;
+
+	public GameObject highlightObj;
+
+	private Transform hookingTo;
+
+	public LayerMask grappleMask;
+
+	public float grappleRadius = 0.2f;
+
+	private GameObject HLObj;
+
+	private bool hookBreak;
+
+	private bool hookReturn;
+
+	private bool startRtrn;
+
+	private float coolF1;
+
+	private float coolF2;
+
+	[NonSerialized]
+	public float gunCharge = 1f;
+
+	private bool charged = true;
+
+	[NonSerialized]
+	public float sens = 10f;
+
+	public Transform firepnt;
+
+	public GameObject[] muzzleFX;
+
+	private Vector3 initVmPoint;
+
+	private Transform viewM;
+
+	public Animation vmAnim;
+
+	private void Start()
+	{
+		cam = GetComponentInChildren<Camera>();
+		cjA = GetComponent<ConfigurableJoint>();
+		cjB = grabber.GetComponent<ConfigurableJoint>();
+		Vector3 vector = grabber.transform.localPosition + grabber.GetComponent<LineRenderer>().GetPosition(0);
+		camOffsetHand = vector;
+		viewM = vmAnim.transform;
+		initVmPoint = viewM.localPosition;
+		vmAnim["IdleR"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_R"));
+		vmAnim["FireR"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_R"));
+		vmAnim["Fire2R"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_R"));
+		vmAnim["ChainedR"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_R"));
+		vmAnim["IdleL"].layer = 1;
+		vmAnim["IdleL"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_L"));
+		vmAnim["FireL"].layer = 1;
+		vmAnim["FireL"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_L"));
+		vmAnim["HoldL"].layer = 1;
+		vmAnim["HoldL"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_L"));
+		vmAnim["ReturnL"].layer = 1;
+		vmAnim["ReturnL"].AddMixingTransform(base.transform.Find("Main Camera/viewmodel/metarig/chest/upper_arm_L"));
+	}
+
+	private void Update()
+	{
+		coolF1 += Time.deltaTime;
+		coolF2 += Time.deltaTime;
+		gunCharge += Time.deltaTime;
+		gunCharge = Mathf.Clamp01(gunCharge);
+		bool flag = false;
+		if ((bool)GameManager.instance && GameManager.instance.soulDatas.Count > 4)
+		{
+			flag = true;
+		}
+		bool flag2 = false;
+		if (GameManager.instance.soulDatas.Count > 4)
+		{
+			flag2 = true;
+		}
+		if (hookReturn)
+		{
+			HookshotReturn();
+		}
+		if (hooked && (bool)hookingTo)
+		{
+			hookshot.transform.position = hookingTo.position;
+		}
+		if (sens > 0f)
+		{
+			GetComponent<MouseLook>().sensitivityX = sens;
+			GetComponent<MouseLook>().sensitivityY = sens;
+			cam.GetComponent<MouseLook>().sensitivityX = sens;
+			cam.GetComponent<MouseLook>().sensitivityY = sens;
+		}
+		if (Input.GetButtonUp("Fire1") && !GameManager.instance.gamePaused && gunCharge >= 0.92f && !flag)
+		{
+			gunCharge = 0f;
+			PlayerFire(0, 10, 0.07f);
+			SoundManager.instance.PlaySingle("shootBig1", base.transform.position - Vector3.up, true);
+			vmAnim.Stop("Fire2R");
+			vmAnim.Play("Fire2R");
+		}
+		if (Input.GetButton("Fire1") && !GameManager.instance.gamePaused && !flag)
+		{
+			gunCharge -= Time.deltaTime * 1.5f;
+			float num = 0.1f;
+			if (gunCharge <= 0.1f)
+			{
+				num += 0.1f;
+			}
+			if (coolF1 >= num && gunCharge <= 0.92f)
+			{
+				SoundManager.instance.PlaySingle("shootShort1", base.transform.position - Vector3.up, true);
+				PlayerFire(0, 1, 0.03f);
+				coolF1 = 0f;
+				vmAnim.Stop("FireR");
+				vmAnim.Play("FireR", PlayMode.StopSameLayer);
+			}
+		}
+		if (flag)
+		{
+			vmAnim.Play("ChainedR");
+			vmAnim.GetComponent<LineRenderer>().enabled = true;
+		}
+		else
+		{
+			vmAnim.GetComponent<LineRenderer>().enabled = false;
+		}
+		if (flag2)
+		{
+			vmAnim.Play("HoldL");
+		}
+		float speed = 1f + GetComponent<Rigidbody>().velocity.magnitude / 1.4f;
+		vmAnim["IdleR"].speed = speed;
+		vmAnim["IdleL"].speed = speed;
+		if (!GetComponent<PhysicsFPSWalker>().IsGrounded())
+		{
+			vmAnim["IdleR"].speed = 0.5f;
+			vmAnim["IdleL"].speed = 0.5f;
+		}
+		if (!Input.GetButton("Fire1") && !vmAnim.IsPlaying("IdleR") && !vmAnim.IsPlaying("FireR") && !vmAnim.IsPlaying("Fire2R") && !flag)
+		{
+			vmAnim.CrossFade("IdleR", 0.2f);
+		}
+		if (gunCharge >= 0.95f && !charged)
+		{
+			charged = true;
+			SoundManager.instance.PlaySingle("load1", base.transform.position - Vector3.up, true);
+		}
+		else if (gunCharge < 0.5f)
+		{
+			charged = false;
+		}
+		gunCharge = Mathf.Clamp01(gunCharge);
+		if (!hooked)
+		{
+			Transform obj = GetObj(grappleRadius);
+			if (((bool)lastHL && (bool)HLObj && (obj == null || obj != lastHL)) || (!lastHL && (bool)HLObj))
+			{
+				UnityEngine.Object.Destroy(HLObj);
+				HLObj = null;
+				lastHL = null;
+			}
+			if (lastHL == null && CanGrapple(obj))
+			{
+				lastHL = obj;
+				addHighlightObj(obj);
+			}
+		}
+		if (hooked)
+		{
+			if (((bool)HLObj && (bool)hookingTo && (!lastHL || lastHL != hookingTo)) || ((!hookingTo || !hookingTo.gameObject.activeSelf) && (bool)HLObj))
+			{
+				if ((!hookingTo || !hookingTo.gameObject.activeSelf) && (bool)HLObj)
+				{
+					hooked = false;
+					hookReturn = true;
+					HookshotReturn();
+				}
+				UnityEngine.Object.Destroy(HLObj);
+				HLObj = null;
+				lastHL = null;
+			}
+			if ((bool)hookingTo && lastHL == null)
+			{
+				Transform transform = hookingTo;
+				lastHL = hookingTo;
+				addHighlightObj(hookingTo);
+			}
+		}
+		if (!vmAnim.IsPlaying("FireL"))
+		{
+			if (hookReturn)
+			{
+				vmAnim.CrossFade("ReturnL", 0.2f);
+			}
+			else if (!hookshot.activeSelf)
+			{
+				vmAnim.CrossFade("IdleL", 0.5f);
+			}
+		}
+		if (Input.GetButton("Fire2") && hooked && !vmAnim.IsPlaying("FireL"))
+		{
+			vmAnim.CrossFade("HoldL", 1f);
+		}
+		if (Input.GetButtonDown("Fire2") && !hooked && !hookReturn && !GameManager.instance.gamePaused && !flag2 && coolF2 > 0.9f)
+		{
+			vmAnim.CrossFade("FireL", 0.1f);
+			HookshotFire(cam.transform.forward.normalized);
+			coolF2 = 0f;
+		}
+		if (Input.GetButtonUp("Fire2") && !GameManager.instance.gamePaused)
+		{
+			if (hooked && (bool)hookingTo)
+			{
+				hookshot.transform.position = hookingTo.position;
+			}
+			if (hookshot.activeSelf || hooked)
+			{
+				hooked = false;
+				hookReturn = true;
+				HookshotReturn();
+			}
+		}
+		if (!hooked)
+		{
+			cjA.connectedAnchor = base.transform.position;
+			cjA.connectedBody = null;
+			cjB.connectedBody = null;
+			FreeMotion(cjA, true);
+			grabber.SetActive(false);
+			if (hookshot.activeSelf && Vector3.Distance(hookshot.transform.position, hsFirePoint) > maxRange)
+			{
+				hookshot.GetComponent<Rigidbody>().velocity = Vector3.zero;
+			}
+			if (hookshot.activeSelf)
+			{
+				float num2 = maxRange * 1.3f;
+				float num3 = 5f;
+				float num4 = Vector3.Distance(hookshot.transform.position, cam.transform.position);
+				if (num4 > num2)
+				{
+					hooked = false;
+					hookReturn = true;
+					HookshotReturn();
+				}
+			}
+		}
+		float num5 = GameManager.instance.soulDatas.Count;
+		perfMult = Mathf.Clamp((num5 + 1f) / 2.5f, 1f, 2f);
+		if (perfMult == 0f)
+		{
+			perfMult = 1f;
+		}
+		if (!grabber.activeSelf && hooked && !GetComponent<LineRenderer>().enabled)
+		{
+			GetComponent<LineRenderer>().enabled = true;
+		}
+	}
+
+	private void FixedUpdate()
+	{
+		Transform transform = base.transform;
+		if ((bool)cjB.connectedBody)
+		{
+			transform = cjB.connectedBody.transform;
+		}
+		Vector3 position = base.transform.InverseTransformPoint(cjA.connectedAnchor);
+		Vector3 position2 = grabber.transform.InverseTransformPoint(transform.position);
+		Vector3 position3 = cam.transform.TransformPoint(camOffsetHand);
+		GetComponent<LineRenderer>().SetPosition(0, base.transform.InverseTransformPoint(position3));
+		if (hooked)
+		{
+			GetComponent<LineRenderer>().SetPosition(1, position);
+		}
+		else
+		{
+			GetComponent<LineRenderer>().SetPosition(1, base.transform.InverseTransformPoint(hookshot.transform.position));
+		}
+		grabber.GetComponent<LineRenderer>().SetPosition(1, position2);
+	}
+
+	private void PlayerFire(int type, int shotCount, float inacc)
+	{
+		for (int i = 0; i < shotCount; i++)
+		{
+			float num = UnityEngine.Random.Range(0f - inacc, inacc);
+			float num2 = UnityEngine.Random.Range(0f - inacc, inacc);
+			Vector3 vector = cam.transform.right * num;
+			Vector3 vector2 = cam.transform.up * num2;
+			Vector3 normalized = (cam.transform.forward.normalized + vector + vector2).normalized;
+			Vector3 vector3 = cam.transform.TransformPoint(GetComponent<GunScript>().localOrigin);
+			vector3 = firepnt.position;
+			GetComponent<GunScript>().FireProjectile(type, 500f, 1f, vector3, normalized, string.Empty);
+		}
+		if (muzzleFX.Length > 0)
+		{
+			int num3 = 0;
+			if (shotCount > 1)
+			{
+				num3 = 1;
+			}
+			GameObject gameObject = UnityEngine.Object.Instantiate(muzzleFX[num3], firepnt.position, Quaternion.LookRotation(cam.transform.forward));
+			gameObject.transform.parent = firepnt;
+		}
+	}
+
+	private void FreeMotion(ConfigurableJoint cj, bool free)
+	{
+		if (free)
+		{
+			cj.xMotion = ConfigurableJointMotion.Free;
+			cj.yMotion = ConfigurableJointMotion.Free;
+			cj.zMotion = ConfigurableJointMotion.Free;
+		}
+		else
+		{
+			cj.xMotion = ConfigurableJointMotion.Limited;
+			cj.yMotion = ConfigurableJointMotion.Limited;
+			cj.zMotion = ConfigurableJointMotion.Limited;
+		}
+	}
+
+	private void addHighlightObj(Transform tr)
+	{
+		HLObj = UnityEngine.Object.Instantiate(highlightObj, tr.position, tr.rotation);
+		if ((bool)GameObject.Find("_effects"))
+		{
+			HLObj.transform.parent = GameObject.Find("_effects").transform;
+		}
+		HLObj.transform.localScale = tr.localScale;
+		HLObj.GetComponent<LockTransformScript>().lockTransform = tr;
+		if ((bool)HLObj.GetComponent<MeshFilter>() && (bool)tr.GetComponent<MeshFilter>())
+		{
+			HLObj.GetComponent<MeshFilter>().mesh = tr.GetComponent<MeshFilter>().mesh;
+		}
+	}
+
+	private Transform GetObj(float r)
+	{
+		Vector3 forward = cam.transform.forward;
+		Vector3 vector = cam.transform.position + forward * maxRange;
+		RaycastHit hitInfo;
+		if (r > 0f && Physics.SphereCast(cam.transform.position, r, forward, out hitInfo, maxRange, grappleMask))
+		{
+			return hitInfo.transform;
+		}
+		if (r <= 0f && Physics.Raycast(cam.transform.position, forward, out hitInfo, maxRange))
+		{
+			return hitInfo.transform;
+		}
+		return null;
+	}
+
+	private bool CanGrapple(Transform tr)
+	{
+		bool result = false;
+		if ((bool)tr && (tr.tag == "Prop" || tr.tag == "Enemy" || tr.tag == "Hook") && (!tr.GetComponent<Health>() || (tr.GetComponent<Health>().stunned && !tr.GetComponent<Health>().willDie)))
+		{
+			result = true;
+		}
+		return result;
+	}
+
+	public void SuperJump(string arg)
+	{
+		GetComponent<Rigidbody>().velocity = Vector3.Scale(GetComponent<Rigidbody>().velocity, new Vector3(1f, 0f, 1f));
+		GetComponent<Rigidbody>().velocity = GetComponent<Rigidbody>().velocity + Vector3.up * GetComponent<PhysicsFPSWalker>().jumpSpeed * 5f;
+		if (arg != string.Empty)
+		{
+			SoundManager.instance.PlaySingle("superjump", base.transform.position - Vector3.up, true);
+		}
+	}
+
+	private void HookshotFire(Vector3 dir)
+	{
+		if (!hookBreak && !hookReturn)
+		{
+			GetComponent<LineRenderer>().enabled = true;
+			float num = 0.2f;
+			hookshot.transform.position = cam.transform.position + cam.transform.up * (0f - num) + cam.transform.right * (0f - num);
+			hsFirePoint = hookshot.transform.position;
+			hookshot.SetActive(true);
+			hookshot.GetComponent<Collider>().isTrigger = false;
+			hookshot.GetComponent<Rigidbody>().isKinematic = false;
+			hookshot.GetComponent<Rigidbody>().velocity = Vector3.zero;
+			hookshot.GetComponent<Rigidbody>().AddForce(dir * hsForce);
+			SoundManager.instance.PlaySingle("hook1", base.transform.position - Vector3.up, true);
+			PhysicsFPSWalker component = GetComponent<PhysicsFPSWalker>();
+			if (!component.IsGrounded())
+			{
+				GetComponent<Rigidbody>().velocity = Vector3.Scale(GetComponent<Rigidbody>().velocity, new Vector3(1f, 0f, 1f));
+				GetComponent<Rigidbody>().velocity = GetComponent<Rigidbody>().velocity + Vector3.up * component.jumpSpeed / 1.6f;
+			}
+		}
+	}
+
+	private void HookshotHide()
+	{
+		GetComponent<LineRenderer>().enabled = false;
+		hookshot.SetActive(false);
+		hookshot.GetComponent<Rigidbody>().isKinematic = true;
+		hookshot.GetComponent<Rigidbody>().velocity = Vector3.zero;
+	}
+
+	private void HookshotReturn()
+	{
+		if (hookBreak)
+		{
+			return;
+		}
+		if (!hooked && hookReturn)
+		{
+			if (!startRtrn)
+			{
+				hookshot.GetComponent<Collider>().isTrigger = true;
+				if ((bool)hookingTo)
+				{
+					if ((bool)hookingTo.GetComponent<Health>() && hookingTo.tag == "Enemy")
+					{
+						SoundManager.instance.PlaySingle("throw1", base.transform.position - Vector3.up, true);
+						if ((bool)hookingTo.GetComponent<Rigidbody>())
+						{
+							hookingTo.GetComponent<Rigidbody>().drag = 0.01f;
+						}
+						if ((bool)hookingTo.GetComponent<GravityCustom>())
+						{
+							hookingTo.GetComponent<GravityCustom>().gravityScale = 0f;
+						}
+						hookingTo.GetComponent<Health>().grappled = false;
+					}
+					else
+					{
+						SoundManager.instance.PlaySingle("hook3", hookingTo.transform.position, true);
+					}
+					if ((bool)hookingTo.GetComponent<Rigidbody>())
+					{
+						hookingTo.GetComponent<Rigidbody>().velocity = Vector3.zero;
+						hookingTo.GetComponent<Rigidbody>().AddForce(cam.transform.forward * hsThrow);
+						if ((bool)hookingTo.GetComponent<CollisionCheck>())
+						{
+							hookingTo.GetComponent<CollisionCheck>().DidThrow(true);
+						}
+					}
+					if ((bool)hookingTo)
+					{
+						Physics.IgnoreCollision(base.gameObject.GetComponent<Collider>(), hookingTo.GetComponent<Collider>(), false);
+					}
+					hookingTo = null;
+				}
+				startRtrn = true;
+			}
+			hookshot.SetActive(true);
+			hookshot.GetComponent<Rigidbody>().isKinematic = false;
+			hookshot.GetComponent<Rigidbody>().velocity = Vector3.zero;
+			float num = 30f;
+			float num2 = 0.2f;
+			Vector3 vector = cam.transform.position + cam.transform.up * (0f - num2) + cam.transform.right * (0f - num2);
+			Vector3 normalized = (vector - hookshot.transform.position).normalized;
+			hookshot.transform.Translate(normalized * num * Time.deltaTime, Space.World);
+			float num3 = Vector3.Distance(hookshot.transform.position, vector);
+			if (!(num3 <= 1f))
+			{
+				return;
+			}
+			SoundManager.instance.PlaySingle("hook4", base.transform.position - Vector3.up, true);
+			hookReturn = false;
+		}
+		GetComponent<LineRenderer>().enabled = false;
+		hookshot.transform.position = cam.transform.position;
+		hookshot.SetActive(false);
+		hookshot.GetComponent<Collider>().isTrigger = false;
+		hookshot.GetComponent<Rigidbody>().isKinematic = true;
+		hookshot.GetComponent<Rigidbody>().velocity = Vector3.zero;
+		hookReturn = false;
+		startRtrn = false;
+	}
+
+	private void HookToTransform(Transform tr)
+	{
+		if (!hooked && (bool)tr.parent && tr.parent.transform.tag == "Enemy")
+		{
+			tr = tr.parent;
+		}
+		if (!hooked && CanGrapple(tr))
+		{
+			if ((bool)hookshot.GetComponent<CollisionCheck>().hitObj)
+			{
+				CollisionCheck.DoHitFX(tr.position, Vector3.up, hookshot, hookshot.GetComponent<CollisionCheck>().hitObj, false);
+			}
+			bool flag = true;
+			if (tr.tag == "Prop" || tr.tag == "Enemy")
+			{
+				flag = false;
+			}
+			hooked = !hooked;
+			hookReturn = false;
+			HookshotHide();
+			if (!hooked)
+			{
+				return;
+			}
+			FreeMotion(cjA, true);
+			cjA.connectedAnchor = base.transform.position;
+			GetComponent<LineRenderer>().enabled = false;
+			grabber.SetActive(false);
+			cjB.connectedBody = tr.GetComponent<Rigidbody>();
+			if (flag)
+			{
+				GetComponent<LineRenderer>().enabled = true;
+				cjA.connectedAnchor = tr.position;
+				FreeMotion(cjA, false);
+			}
+			else
+			{
+				grabber.SetActive(true);
+				if ((bool)tr.GetComponent<Health>() && tr.tag == "Enemy")
+				{
+					tr.GetComponent<Health>().grappled = true;
+				}
+			}
+			SoundManager.instance.PlaySingle("hook2", tr.position, true);
+			hookingTo = tr;
+			Physics.IgnoreCollision(base.gameObject.GetComponent<Collider>(), hookingTo.GetComponent<Collider>(), true);
+		}
+		else if (hooked)
+		{
+			hooked = false;
+		}
+	}
+
+	public void GrappleCollide(Collider coll, bool trigger)
+	{
+		if (!hookBreak)
+		{
+			if (trigger && !hooked && !hookReturn)
+			{
+				HookToTransform(coll.transform);
+			}
+			if (!trigger && !hookReturn)
+			{
+				Vector3 normalized = (base.transform.position + Vector3.up * 4f - hookshot.transform.position).normalized;
+				StartCoroutine(BreakHook(normalized));
+			}
+		}
+	}
+
+	private IEnumerator BreakHook(Vector3 dir)
+	{
+		hookBreak = true;
+		hookshot.GetComponent<Rigidbody>().velocity = dir * 5f;
+		yield return new WaitForSeconds(0.35f);
+		hookBreak = false;
+		hookReturn = true;
+	}
+}
