@@ -192,30 +192,52 @@ public class GameManager : MonoBehaviour
 	private void OnLevelWasLoaded(int level)
 	{
 		player = GameObject.FindGameObjectWithTag("Player");
-		UnityEngine.Object.FindObjectOfType<Canvas>().worldCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+		if (player == null)
+		{
+			PlayerScript ps = UnityEngine.Object.FindObjectOfType<PlayerScript>();
+			if (ps != null) player = ps.gameObject;
+		}
+		Canvas canvas = UnityEngine.Object.FindObjectOfType<Canvas>();
+		GameObject mainCamObj = GameObject.FindGameObjectWithTag("MainCamera");
+		Camera cam = mainCamObj != null ? mainCamObj.GetComponent<Camera>() : Camera.main;
+		if (cam == null) cam = UnityEngine.Object.FindObjectOfType<Camera>();
+		if (canvas != null && cam != null)
+		{
+			canvas.worldCamera = cam;
+		}
 		if ((bool)player)
 		{
-			SoundManager.instance.PlaySingle("startLvl", player.transform.position, true);
+			if (SoundManager.instance != null)
+			{
+				SoundManager.instance.PlaySingle("startLvl", player.transform.position, true);
+			}
 			lastCheckpntTime = lvlCheckpntTime;
 			player.transform.position = checkpntPos;
-			player.GetComponent<Rigidbody>().velocity = Vector3.zero;
+			if (player.GetComponent<Rigidbody>() != null)
+			{
+				player.GetComponent<Rigidbody>().velocity = Vector3.zero;
+			}
 			if (checkpntPos != Vector3.zero)
 			{
 				player.transform.eulerAngles = new Vector3(0f, cpYrot, 0f);
 			}
-			player.GetComponent<PlayerScript>().sens = sensVal;
+			if (player.GetComponent<PlayerScript>() != null)
+			{
+				player.GetComponent<PlayerScript>().sens = sensVal;
+			}
 		}
 		if ((bool)GameObject.Find("en_skullBoss"))
 		{
 			SetBoss(GameObject.Find("en_skullBoss"));
 		}
-		else
+		else if (bossHp != null)
 		{
 			boss = null;
 			bossHp.transform.parent.gameObject.SetActive(false);
 		}
 		secretSetLvl();
 	}
+
 
 	private void Update()
 	{
