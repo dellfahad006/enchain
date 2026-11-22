@@ -5,6 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -15,20 +20,21 @@ jobs:
 
       - name: Free disk space
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQN
           df -h /
 
-      - name: Install XVFB and libtinfo5
+      - name: Install FFmpeg, XVFB, and libtinfo5
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb libtinfo5 || true
+          sudo apt-get install -y ffmpeg xvfb libtinfo5 || true
           if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ] && [ ! -e /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
             sudo ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
           fi
 
-      - name: Set WebGL template
+      - name: Fix WebGL template and remove broken compute shaders
         run: |
           sed -i -E 's/^(\s*webGLTemplate:).*$/\1 APPLICATION:Default/' project/ProjectSettings/ProjectSettings.asset
+          rm -rf project/Assets/ComputeShader project/Assets/ComputeShader.meta
 
       - name: Setup Unity Editor
         uses: buildalon/unity-setup@v3
@@ -56,9 +62,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: project/Library
-          key: Library-WebGL-2020.3.40f1-${{ hashFiles('project/Assets/**', 'project/Packages/**', 'project/ProjectSettings/**') }}
+          key: Library-WebGL-2020.3.40f1-v2-${{ hashFiles('project/Assets/**', 'project/Packages/**', 'project/ProjectSettings/**') }}
           restore-keys: |
-            Library-WebGL-2020.3.40f1-
+            Library-WebGL-2020.3.40f1-v2-
 
       - name: Build WebGL Project
         run: |
@@ -86,8 +92,31 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Prepare WebGL build folder
+        run: |
+          set -e
+          mapfile -t INDEX_FILES < <(find project/Builds -name index.html -type f)
+          BUILD_DIR="$(dirname "${INDEX_FILES[0]}")"
+          mkdir -p pages-artifact
+          cp -a "$BUILD_DIR/." pages-artifact/
+          test -f pages-artifact/index.html
+
       - name: Upload WebGL Build
         uses: actions/upload-artifact@v4
         with:
           name: Build
-          path: project/Builds
+          path: pages-artifact
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-artifact
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
