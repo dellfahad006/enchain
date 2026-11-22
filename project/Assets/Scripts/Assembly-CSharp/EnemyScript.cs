@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -65,6 +66,44 @@ public class EnemyScript : MonoBehaviour
 
 	private Animation anim;
 
+	private bool HasClip(string clipName)
+	{
+		return anim != null && anim.GetClip(clipName) != null;
+	}
+
+	private HashSet<string> warnedClips = new HashSet<string>();
+
+	private void WarnMissing(string clipName)
+	{
+		if (warnedClips.Add(clipName))
+		{
+			string have = "";
+			if (anim != null)
+			{
+				foreach (AnimationState state in anim)
+				{
+					have += state.name + ", ";
+				}
+			}
+			Debug.LogWarning("[Enchain] '" + name + "' (class " + enemyClass + ") has no clip '" + clipName + "'. Has: " + have);
+		}
+	}
+
+	private void SafePlay(string clipName)
+	{
+		if (HasClip(clipName)) { anim.Play(clipName); } else { WarnMissing(clipName); }
+	}
+
+	private void SafeCrossFade(string clipName, float fade)
+	{
+		if (HasClip(clipName)) { anim.CrossFade(clipName, fade); } else { WarnMissing(clipName); }
+	}
+
+	private void SafeBlend(string clipName)
+	{
+		if (HasClip(clipName)) { anim.Blend(clipName); } else { WarnMissing(clipName); }
+	}
+
 	private void Start()
 	{
 		player = GameObject.FindGameObjectWithTag("Player").transform;
@@ -74,17 +113,13 @@ public class EnemyScript : MonoBehaviour
 		if ((bool)GetComponentInChildren<Animation>())
 		{
 			anim = GetComponentInChildren<Animation>();
-			anim[animStates[0]].speed = Random.Range(0.95f, 1.05f);
+			if (HasClip(animStates[0])) { anim[animStates[0]].speed = Random.Range(0.95f, 1.05f); }
 			if ((bool)mixingBone)
 			{
-				anim["Swing1"].AddMixingTransform(mixingBone);
-				anim["Swing1"].layer = 1;
-				anim["Cry"].AddMixingTransform(mixingBone);
-				anim["Cry"].layer = 1;
-				anim["Hurt1"].AddMixingTransform(mixingBone);
-				anim["Hurt1"].layer = 1;
-				anim["Hurt2"].AddMixingTransform(mixingBone);
-				anim["Hurt2"].layer = 1;
+				if (HasClip("Swing1")) { anim["Swing1"].AddMixingTransform(mixingBone); anim["Swing1"].layer = 1; }
+				if (HasClip("Cry")) { anim["Cry"].AddMixingTransform(mixingBone); anim["Cry"].layer = 1; }
+				if (HasClip("Hurt1")) { anim["Hurt1"].AddMixingTransform(mixingBone); anim["Hurt1"].layer = 1; }
+				if (HasClip("Hurt2")) { anim["Hurt2"].AddMixingTransform(mixingBone); anim["Hurt2"].layer = 1; }
 			}
 		}
 	}
@@ -103,7 +138,7 @@ public class EnemyScript : MonoBehaviour
 					shootTimer = 0f;
 					if ((bool)anim)
 					{
-						anim.Play("Spot");
+						SafePlay("Spot");
 					}
 					SoundManager.instance.PlaySingle(crySound, base.transform.position, true);
 				}
@@ -134,7 +169,7 @@ public class EnemyScript : MonoBehaviour
 						{
 							if (!dashed)
 							{
-								anim.Play("Dash");
+								SafePlay("Dash");
 								dashed = true;
 								SoundManager.instance.PlaySingle("dashSound", base.transform.position, true);
 								rb.AddForce(normalized * moveForce * 60f);
@@ -177,11 +212,11 @@ public class EnemyScript : MonoBehaviour
 			}
 			if ((bool)anim && !anim.IsPlaying("Spot") && !anim.IsPlaying("Stun") && !anim.IsPlaying("Dash"))
 			{
-				anim.Play(animStates[0]);
+				SafePlay(animStates[0]);
 			}
 			if (GetComponent<Health>().stunned && (bool)anim)
 			{
-				anim.Play("Stun");
+				SafePlay("Stun");
 			}
 		}
 		if (enemyClass == 2 && !dead)
@@ -191,20 +226,20 @@ public class EnemyScript : MonoBehaviour
 			hurtCooldown -= Time.deltaTime;
 			if (component.velocity.magnitude > 1f)
 			{
-				anim[animStates[1]].speed = component.velocity.magnitude / component.speed;
-				anim.CrossFade(animStates[1], 0.5f);
+				if (HasClip(animStates[1])) { anim[animStates[1]].speed = component.velocity.magnitude / component.speed; }
+				SafeCrossFade(animStates[1], 0.5f);
 			}
 			if ((bool)player && InSight(player) && !anim.IsPlaying("Attack1") && Vector3.Distance(base.transform.position, player.position) < 7.5f)
 			{
 				swingLR.time = 0.3f;
-				anim.Blend("Swing1");
+				SafeBlend("Swing1");
 				cryCooldown = 2f;
 			}
 			if ((bool)player && InSight(player) && (Vector3.Distance(base.transform.position, player.position) > 16f || anim.IsPlaying("Attack1")) && swingCooldown < 0f)
 			{
 				swingLR.time = 0.3f;
-				anim.CrossFade("Attack1", 0.2f);
-				if (anim["Attack1"].time >= 2f)
+				SafeCrossFade("Attack1", 0.2f);
+				if (HasClip("Attack1") && anim["Attack1"].time >= 2f)
 				{
 					swingCooldown = 6f;
 				}
@@ -212,7 +247,7 @@ public class EnemyScript : MonoBehaviour
 			}
 			if ((bool)player && InSight(player) && cryCooldown < 0f && !anim.IsPlaying("Attack1") && !anim.IsPlaying("Swing1"))
 			{
-				anim.Blend("Cry");
+				SafeBlend("Cry");
 				if ((bool)SoundManager.instance)
 				{
 					SoundManager.instance.PlaySingle("cryB2", base.transform.position, true);
@@ -221,7 +256,7 @@ public class EnemyScript : MonoBehaviour
 			}
 			if ((bool)anim && !anim.IsPlaying("Attack1") && component.velocity.magnitude < 1f)
 			{
-				anim.CrossFade(animStates[0], 0.6f);
+				SafeCrossFade(animStates[0], 0.6f);
 			}
 			if (!anim.IsPlaying("Attack1") && !anim.IsPlaying("Swing1"))
 			{
@@ -335,7 +370,7 @@ public class EnemyScript : MonoBehaviour
 	{
 		if ((bool)anim && !anim.IsPlaying("Attack1") && !anim.IsPlaying("Swing1") && !anim.IsPlaying("Cry") && hurtCooldown <= 0f)
 		{
-			anim.Blend("Hurt" + Random.Range(1, 3));
+			SafeBlend("Hurt" + Random.Range(1, 3));
 			if ((bool)SoundManager.instance)
 			{
 				SoundManager.instance.PlaySingle("cryHurt", base.transform.position, true);
@@ -369,7 +404,7 @@ public class EnemyScript : MonoBehaviour
 		{
 			SoundManager.instance.PlaySingle("cryDie", base.transform.position, true);
 		}
-		anim.CrossFade("Death", 0.1f);
+		SafeCrossFade("Death", 0.1f);
 		dead = true;
 	}
 }

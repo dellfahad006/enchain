@@ -11,6 +11,8 @@ public class CursorHideShow : MonoBehaviour
 
         private bool isLocked;
 
+        private bool allowRelockOnClick = true;
+
         public GameObject[] crosshairObjs;
 
         private void Start()
@@ -57,6 +59,7 @@ public class CursorHideShow : MonoBehaviour
 
         public void Unpause(bool lockCursor)
         {
+                allowRelockOnClick = lockCursor;
                 setCursorLock(lockCursor);
                 pauseGame(false);
         }
@@ -69,12 +72,13 @@ public class CursorHideShow : MonoBehaviour
 
         private void Update()
         {
-                if (!paused && Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+                if (!paused && allowRelockOnClick && Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
                 {
                         setCursorLock(true);
                 }
                 if (Input.GetKeyUp(KeyCode.Escape) || (Input.GetKeyDown(KeyCode.P) && !paused))
                 {
+                        allowRelockOnClick = true;
                         setCursorLock(!isLocked);
                         pauseGame(!paused);
                 }
