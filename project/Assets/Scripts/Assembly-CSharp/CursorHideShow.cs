@@ -52,9 +52,48 @@ public class CursorHideShow : MonoBehaviour
                 GameObject[] array = crosshairObjs;
                 foreach (GameObject gameObject in array)
                 {
-                        gameObject.SetActive(!pause);
+                        gameObject.SetActive(!pause && DevSettings.showCrosshair);
                 }
                 paused = pause;
+        }
+
+        public void ApplyCrosshair()
+        {
+                if (crosshairObjs == null)
+                {
+                        return;
+                }
+                foreach (GameObject gameObject in crosshairObjs)
+                {
+                        if (gameObject != null && gameObject.activeSelf != (!paused && DevSettings.showCrosshair))
+                        {
+                                gameObject.SetActive(!paused && DevSettings.showCrosshair);
+                        }
+                }
+        }
+
+        private float devPrevScale = 1f;
+
+        private bool devPrevLocked = true;
+
+        // pause used by the dev menu: no pause screen, just frozen time and a free cursor
+        public void DevPause(bool on)
+        {
+                if (on)
+                {
+                        devPrevLocked = isLocked;
+                        devPrevScale = Time.timeScale > 0f ? Time.timeScale : 1f;
+                        Time.timeScale = 0f;
+                        paused = true;
+                        setCursorLock(false);
+                }
+                else
+                {
+                        Time.timeScale = devPrevScale;
+                        paused = false;
+                        allowRelockOnClick = true;
+                        setCursorLock(devPrevLocked);
+                }
         }
 
         public void Unpause(bool lockCursor)
@@ -76,7 +115,7 @@ public class CursorHideShow : MonoBehaviour
                 {
                         setCursorLock(true);
                 }
-                if (Input.GetKeyUp(KeyCode.Escape) || (Input.GetKeyDown(KeyCode.P) && !paused))
+                if (!DevSettings.menuOpen && Time.frameCount != DevSettings.lastCloseFrame && (Input.GetKeyUp(KeyCode.Escape) || (Input.GetKeyDown(KeyCode.P) && !paused)))
                 {
                         allowRelockOnClick = true;
                         setCursorLock(!isLocked);

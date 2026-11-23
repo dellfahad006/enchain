@@ -108,6 +108,54 @@ public class EnemyScript : MonoBehaviour
 		}
 	}
 
+	private float mutterTimer = -1f;
+
+	private bool stunSfxPlayed;
+
+	// extra procedural enemy sounds: idle mutters and a stun zap
+	private void UpdateExtraSounds()
+	{
+		if (dead || SoundManager.instance == null)
+		{
+			return;
+		}
+		Health health = GetComponent<Health>();
+		bool stunnedNow = health != null && health.stunned;
+		if (stunnedNow && !stunSfxPlayed)
+		{
+			stunSfxPlayed = true;
+			if (DevSettings.sfxZap)
+			{
+				SoundManager.instance.PlayClip(ProcSfx.Get("zap"), base.transform.position, 0.9f, true);
+			}
+		}
+		else if (!stunnedNow)
+		{
+			stunSfxPlayed = false;
+		}
+		if (stunnedNow || player == null)
+		{
+			return;
+		}
+		if (mutterTimer < 0f)
+		{
+			mutterTimer = Random.Range(2f, 8f);
+		}
+		if (Vector3.Distance(base.transform.position, player.position) > 20f)
+		{
+			return;
+		}
+		mutterTimer -= Time.deltaTime;
+		if (mutterTimer <= 0f)
+		{
+			mutterTimer = Random.Range(5f, 11f);
+			if (DevSettings.sfxMutter)
+			{
+				SoundManager.instance.PlayClip(ProcSfx.Get("mutter"), base.transform.position, 0.4f, true);
+			}
+		}
+	}
+
 	private bool HasClip(string clipName)
 	{
 		return anim != null && anim.GetClip(clipName) != null;
@@ -169,6 +217,7 @@ public class EnemyScript : MonoBehaviour
 
 	private void Update()
 	{
+		UpdateExtraSounds();
 		if (enemyClass == 0 || enemyClass == 1)
 		{
 			if (lookOnSight && (bool)player && InSight(player) && !GetComponent<Health>().stunned)
@@ -184,6 +233,10 @@ public class EnemyScript : MonoBehaviour
 						SafePlay("Spot");
 					}
 					SoundManager.instance.PlaySingle(crySound, base.transform.position, true);
+					if (DevSettings.sfxAlert && Random.value < 0.5f)
+					{
+						SoundManager.instance.PlayClip(ProcSfx.Get("alert"), base.transform.position, 0.8f, true);
+					}
 				}
 				sightTime = 0f;
 				LookToggle(true);

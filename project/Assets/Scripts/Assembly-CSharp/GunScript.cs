@@ -16,7 +16,7 @@ public class GunScript : MonoBehaviour
 	{
 	}
 
-	public void FireProjectile(int item, float force, float scale, Vector3 origin, Vector3 dir, string sound)
+	public void FireProjectile(int item, float force, float scale, Vector3 origin, Vector3 dir, string sound, float damageMult = 1f)
 	{
 		Vector3 position = origin + base.transform.TransformDirection(localOrigin);
 		if (overrideOrigin)
@@ -30,6 +30,14 @@ public class GunScript : MonoBehaviour
 			gameObject.transform.parent = GameObject.Find("_effects").transform;
 		}
 		gameObject.transform.localScale *= scale;
+		if (damageMult != 1f)
+		{
+			CollisionCheck hitCheck = gameObject.GetComponentInChildren<CollisionCheck>();
+			if (hitCheck != null)
+			{
+				hitCheck.baseDamage = Mathf.Max(1, Mathf.RoundToInt((float)hitCheck.baseDamage * damageMult));
+			}
+		}
 		Physics.IgnoreCollision(gameObject.GetComponent<Collider>(), base.gameObject.GetComponent<Collider>(), true);
 		Rigidbody component = gameObject.GetComponent<Rigidbody>();
 		component.velocity = Vector3.zero;

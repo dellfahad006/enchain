@@ -56,6 +56,22 @@ public class PlayerScript : MonoBehaviour
 
 	private bool charged = true;
 
+	// --- gun rework state ---
+	private bool fireLocked = true;
+
+	private bool gunEmptied;
+
+	private float reloadLock;
+
+	// 1.5 = original drain while the bar is above 0.92
+	private const float DrainStart = 1.5f;
+
+	private float hookBaseRadius = -1f;
+
+	private float swingBoostTimer;
+
+	private Transform swingAnchor;
+
 	[NonSerialized]
 	public float sens = 10f;
 
@@ -72,6 +88,11 @@ public class PlayerScript : MonoBehaviour
 	private void Start()
 	{
 		cam = GetComponentInChildren<Camera>();
+		SphereCollider tipCollider = hookshot.GetComponent<SphereCollider>();
+		if (tipCollider != null)
+		{
+			hookBaseRadius = tipCollider.radius;
+		}
 		cjA = GetComponent<ConfigurableJoint>();
 		cjB = grabber.GetComponent<ConfigurableJoint>();
 		Vector3 vector = grabber.transform.localPosition + grabber.GetComponent<LineRenderer>().GetPosition(0);
@@ -99,15 +120,7 @@ public class PlayerScript : MonoBehaviour
 		gunCharge += Time.deltaTime;
 		gunCharge = Mathf.Clamp01(gunCharge);
 		bool flag = false;
-		if ((bool)GameManager.instance && GameManager.instance.soulDatas.Count > 4)
-		{
-			flag = true;
-		}
 		bool flag2 = false;
-		if (GameManager.instance.soulDatas.Count > 4)
-		{
-			flag2 = true;
-		}
 		if (hookReturn)
 		{
 			HookshotReturn();
@@ -123,30 +136,62 @@ public class PlayerScript : MonoBehaviour
 			cam.GetComponent<MouseLook>().sensitivityX = sens;
 			cam.GetComponent<MouseLook>().sensitivityY = sens;
 		}
-		if (Input.GetButtonUp("Fire1") && !GameManager.instance.gamePaused && gunCharge >= 0.92f && !flag)
+		bool paused = GameManager.instance.gamePaused;
+		if (paused)
 		{
-			gunCharge = 0f;
-			PlayerFire(0, 10, 0.07f);
-			SoundManager.instance.PlaySingle("shootBig1", base.transform.position - Vector3.up, true);
-			vmAnim.Stop("Fire2R");
-			vmAnim.Play("Fire2R");
+			fireLocked = true;
 		}
-		if (Input.GetButton("Fire1") && !GameManager.instance.gamePaused && !flag)
+		else if (fireLocked && !Input.GetButton("Fire1") && !Input.GetButtonUp("Fire1"))
 		{
-			gunCharge -= Time.deltaTime * 1.5f;
-			float num = 0.1f;
-			if (gunCharge <= 0.1f)
+			fireLocked = false;
+		}
+		bool canFire = !paused && !fireLocked && !flag;
+		reloadLock -= Time.deltaTime;
+		bool reloading = reloadLock > 0f;
+		if (!Input.GetButton("Fire1") && !Input.GetButtonUp("Fire1"))
+		{
+			gunEmptied = false;
+		}
+		if (canFire && Input.GetButtonUp("Fire1"))
+		{
+			if (gunEmptied)
 			{
-				num += 0.1f;
+				gunEmptied = false;
+				gunCharge = 0f;
+				StartReload();
 			}
-			if (coolF1 >= num && gunCharge <= 0.92f)
+			else if (gunCharge >= 0.92f && !reloading)
+			{
+				gunCharge = 0f;
+				PlayerFire(0, 10, 0.07f, 1f);
+				SoundManager.instance.PlaySingle("shootBig1", base.transform.position - Vector3.up, true);
+				StartReload();
+			}
+		}
+		if (canFire && !reloading && Input.GetButton("Fire1") && !gunEmptied)
+		{
+			gunCharge -= Time.deltaTime * ((gunCharge > 0.92f) ? DrainStart : DevSettings.barDrainHold);
+			if (gunCharge <= 0f)
+			{
+				gunCharge = 0f;
+				gunEmptied = true;
+			}
+			else if (coolF1 >= 0.1f && gunCharge <= 0.92f)
 			{
 				SoundManager.instance.PlaySingle("shootShort1", base.transform.position - Vector3.up, true);
-				PlayerFire(0, 1, 0.03f);
+				PlayerFire(0, 1, 0.03f, DevSettings.shotDamageMult);
 				coolF1 = 0f;
 				vmAnim.Stop("FireR");
 				vmAnim.Play("FireR", PlayMode.StopSameLayer);
 			}
+		}
+		if (canFire && !reloading && Input.GetButton("Fire1") && gunEmptied && DevSettings.slowFireWhenEmpty && coolF1 >= 0.2f)
+		{
+			SoundManager.instance.PlaySingle("shootShort1", base.transform.position - Vector3.up, true);
+			PlayerFire(0, 1, 0.03f, DevSettings.shotDamageMult);
+			coolF1 = 0f;
+			vmAnim.Stop("FireR");
+			vmAnim.Play("FireR", PlayMode.StopSameLayer);
 		}
 		if (flag)
 		{
@@ -185,7 +230,7 @@ public class PlayerScript : MonoBehaviour
 		gunCharge = Mathf.Clamp01(gunCharge);
 		if (!hooked)
 		{
-			Transform obj = GetObj(grappleRadius);
+			Transform obj = GetHighlightTarget();
 			if (((bool)lastHL && (bool)HLObj && (obj == null || obj != lastHL)) || (!lastHL && (bool)HLObj))
 			{
 				UnityEngine.Object.Destroy(HLObj);
@@ -287,10 +332,23 @@ public class PlayerScript : MonoBehaviour
 		{
 			GetComponent<LineRenderer>().enabled = true;
 		}
+		UpdateHookForgiveness();
 	}
 
 	private void FixedUpdate()
 	{
+		if (swingBoostTimer > 0f)
+		{
+			if (!hooked || swingAnchor == null)
+			{
+				swingBoostTimer = 0f;
+			}
+			else
+			{
+				swingBoostTimer -= Time.fixedDeltaTime;
+				GetComponent<Rigidbody>().AddForce(SwingBoostDir(swingAnchor.position) * (DevSettings.swingBoost / Mathf.Max(0.01f, DevSettings.swingBoostDuration)), ForceMode.Acceleration);
+			}
+		}
 		Transform transform = base.transform;
 		if ((bool)cjB.connectedBody)
 		{
@@ -311,7 +369,7 @@ public class PlayerScript : MonoBehaviour
 		grabber.GetComponent<LineRenderer>().SetPosition(1, position2);
 	}
 
-	private void PlayerFire(int type, int shotCount, float inacc)
+	private void PlayerFire(int type, int shotCount, float inacc, float damageMult)
 	{
 		for (int i = 0; i < shotCount; i++)
 		{
@@ -322,7 +380,7 @@ public class PlayerScript : MonoBehaviour
 			Vector3 normalized = (cam.transform.forward.normalized + vector + vector2).normalized;
 			Vector3 vector3 = cam.transform.TransformPoint(GetComponent<GunScript>().localOrigin);
 			vector3 = firepnt.position;
-			GetComponent<GunScript>().FireProjectile(type, 500f, 1f, vector3, normalized, string.Empty);
+			GetComponent<GunScript>().FireProjectile(type, 500f, 1f, vector3, normalized, string.Empty, damageMult);
 		}
 		if (muzzleFX.Length > 0)
 		{
@@ -333,6 +391,158 @@ public class PlayerScript : MonoBehaviour
 			}
 			GameObject gameObject = UnityEngine.Object.Instantiate(muzzleFX[num3], firepnt.position, Quaternion.LookRotation(cam.transform.forward));
 			gameObject.transform.parent = firepnt;
+			if (shotCount > 1)
+			{
+				BrightenBlast(gameObject);
+			}
+		}
+	}
+
+	private Transform GetHighlightTarget()
+	{
+		Vector3 forward = cam.transform.forward;
+		RaycastHit hitInfo;
+		if (DevSettings.hookPointHighlightRadius > 0f && Physics.SphereCast(cam.transform.position, DevSettings.hookPointHighlightRadius, forward, out hitInfo, maxRange, grappleMask) && hitInfo.transform.tag == "Hook")
+		{
+			return hitInfo.transform;
+		}
+		float radius = DevSettings.enemyHighlightRadius;
+		if (radius > 0f && Physics.SphereCast(cam.transform.position, radius, forward, out hitInfo, maxRange, grappleMask))
+		{
+			return hitInfo.transform;
+		}
+		if (radius <= 0f && Physics.Raycast(cam.transform.position, forward, out hitInfo, maxRange))
+		{
+			return hitInfo.transform;
+		}
+		return null;
+	}
+
+	private Transform GrabRoot(Collider coll)
+	{
+		Transform transform = coll.transform;
+		if ((bool)transform.parent && transform.parent.tag == "Enemy")
+		{
+			transform = transform.parent;
+		}
+		return transform;
+	}
+
+	// makes the chain tip more forgiving: smaller wall collider, bigger catch radius
+	private void UpdateHookForgiveness()
+	{
+		SphereCollider tip = hookshot.GetComponent<SphereCollider>();
+		if (tip != null && hookBaseRadius > 0f)
+		{
+			tip.radius = hookBaseRadius * Mathf.Max(0.05f, DevSettings.hookWallColliderScale);
+		}
+		if (!hookshot.activeSelf || hooked || hookReturn || hookBreak || GameManager.instance.gamePaused)
+		{
+			return;
+		}
+		float radius = DevSettings.hookCatchRadius;
+		if (radius <= 0f)
+		{
+			return;
+		}
+		Collider[] found = Physics.OverlapSphere(hookshot.transform.position, radius, grappleMask, QueryTriggerInteraction.Collide);
+		foreach (Collider coll in found)
+		{
+			if (coll == null || !coll.gameObject.activeInHierarchy || coll.transform == hookshot.transform || coll.transform.IsChildOf(base.transform))
+			{
+				continue;
+			}
+			if (CanGrapple(GrabRoot(coll)))
+			{
+				HookToTransform(coll.transform);
+				return;
+			}
+		}
+	}
+
+	private Vector3 SwingBoostDir(Vector3 anchorPos)
+	{
+		Vector3 toAnchor = (anchorPos - base.transform.position).normalized;
+		Vector3 look = cam.transform.forward.normalized;
+		Vector3 dir = Vector3.Lerp(toAnchor, look, DevSettings.swingBoostLookMix);
+		if (dir.sqrMagnitude < 0.0001f)
+		{
+			return toAnchor;
+		}
+		return dir.normalized;
+	}
+
+	private void StartSwingBoost(Transform anchor)
+	{
+		if (DevSettings.swingBoost <= 0f)
+		{
+			return;
+		}
+		if (DevSettings.swingBoostDuration <= 0.01f)
+		{
+			Rigidbody body = GetComponent<Rigidbody>();
+			body.velocity = body.velocity + SwingBoostDir(anchor.position) * DevSettings.swingBoost;
+			swingBoostTimer = 0f;
+		}
+		else
+		{
+			swingBoostTimer = DevSettings.swingBoostDuration;
+			swingAnchor = anchor;
+		}
+	}
+
+	private void StartReload()
+	{
+		vmAnim.Stop("Fire2R");
+		vmAnim.Play("Fire2R");
+		reloadLock = Mathf.Clamp(vmAnim["Fire2R"].length, 0.3f, 1.5f);
+	}
+
+	private void BrightenBlast(GameObject fx)
+	{
+		ParticleSystem[] systems = fx.GetComponentsInChildren<ParticleSystem>(true);
+		foreach (ParticleSystem ps in systems)
+		{
+			ParticleSystem.MainModule main = ps.main;
+			ParticleSystem.MinMaxGradient startColor = main.startColor;
+			if (startColor.mode == ParticleSystemGradientMode.Color)
+			{
+				main.startColor = BrightenColor(startColor.color);
+			}
+			else if (startColor.mode == ParticleSystemGradientMode.TwoColors)
+			{
+				main.startColor = new ParticleSystem.MinMaxGradient(BrightenColor(startColor.colorMin), BrightenColor(startColor.colorMax));
+			}
+		}
+		Light[] lights = fx.GetComponentsInChildren<Light>(true);
+		foreach (Light fxLight in lights)
+		{
+			fxLight.intensity *= DevSettings.blastLightBoost;
+		}
+	}
+
+	private static Color BrightenColor(Color c)
+	{
+		Color result = Color.Lerp(c, new Color(1f, 0.93f, 0.7f), DevSettings.blastBrightness);
+		result.a = Mathf.Clamp01(Mathf.Lerp(c.a, Mathf.Max(c.a, 0.9f), DevSettings.blastBrightness));
+		return result;
+	}
+
+	private void LateUpdate()
+	{
+		// the second ability's chains are invisible; only the hook ball stays visible
+		LineRenderer own = GetComponent<LineRenderer>();
+		if (own != null)
+		{
+			own.enabled = false;
+		}
+		if (grabber != null)
+		{
+			LineRenderer grab = grabber.GetComponent<LineRenderer>();
+			if (grab != null)
+			{
+				grab.enabled = false;
+			}
 		}
 	}
 
@@ -541,6 +751,7 @@ public class PlayerScript : MonoBehaviour
 				GetComponent<LineRenderer>().enabled = true;
 				cjA.connectedAnchor = tr.position;
 				FreeMotion(cjA, false);
+				StartSwingBoost(tr);
 			}
 			else
 			{
@@ -570,6 +781,15 @@ public class PlayerScript : MonoBehaviour
 			}
 			if (!trigger && !hookReturn)
 			{
+				if (!hooked && CanGrapple(GrabRoot(coll)))
+				{
+					HookToTransform(coll.transform);
+					return;
+				}
+				if (!DevSettings.wallHitsCancelHook || Vector3.Distance(hookshot.transform.position, hsFirePoint) < DevSettings.wallGraceDistance)
+				{
+					return;
+				}
 				Vector3 normalized = (base.transform.position + Vector3.up * 4f - hookshot.transform.position).normalized;
 				StartCoroutine(BreakHook(normalized));
 			}

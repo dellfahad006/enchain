@@ -46,11 +46,22 @@ public class ActivateTrigger : MonoBehaviour
 	[NonSerialized]
 	public bool triggered;
 
+
 	private void Start()
 	{
 		if (gameMan)
 		{
 			target = GameManager.instance;
+		}
+		if (DevSettings.ignorePadRequirements && dataNeeded != 0)
+		{
+			foreach (Transform child in base.transform)
+			{
+				if (child.name.StartsWith("Plane"))
+				{
+					child.gameObject.SetActive(false);
+				}
+			}
 		}
 	}
 
@@ -154,7 +165,7 @@ public class ActivateTrigger : MonoBehaviour
 
 	private void OnTriggerEnter(Collider other)
 	{
-		if (other.tag == activator && !triggered && (dataNeeded == 0 || dataNeededAmt == 0 || GameManager.instance.SoulDataContainsAmt(dataNeeded) >= dataNeededAmt))
+		if (other.tag == activator && !triggered && (DevSettings.ignorePadRequirements || dataNeeded == 0 || dataNeededAmt == 0 || GameManager.instance.SoulDataContainsAmt(dataNeeded) >= dataNeededAmt))
 		{
 			DoActivateTrigger();
 		}
