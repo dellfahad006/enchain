@@ -56,6 +56,21 @@ public class PlayerScript : MonoBehaviour
 
 	private bool charged = true;
 
+	// --- gun rework state ---
+	private bool fireLocked = true;
+
+	private bool gunEmptied;
+
+	private float reloadLock;
+
+	// short shots do 50% more damage to make up for the 30% smaller bar
+	private const float ShotDamageMult = 1.5f;
+
+	// 1.5 = original drain. After the first 0.08 of charge the bar drains faster (30% shorter hold)
+	private const float DrainStart = 1.5f;
+
+	private const float DrainHold = 1.714f;
+
 	[NonSerialized]
 	public float sens = 10f;
 
@@ -72,6 +87,7 @@ public class PlayerScript : MonoBehaviour
 	private void Start()
 	{
 		cam = GetComponentInChildren<Camera>();
+		grappleRadius = Mathf.Min(grappleRadius, 0.15f);
 		cjA = GetComponent<ConfigurableJoint>();
 		cjB = grabber.GetComponent<ConfigurableJoint>();
 		Vector3 vector = grabber.transform.localPosition + grabber.GetComponent<LineRenderer>().GetPosition(0);
@@ -99,15 +115,7 @@ public class PlayerScript : MonoBehaviour
 		gunCharge += Time.deltaTime;
 		gunCharge = Mathf.Clamp01(gunCharge);
 		bool flag = false;
-		if ((bool)GameManager.instance && GameManager.instance.soulDatas.Count > 4)
-		{
-			flag = true;
-		}
 		bool flag2 = false;
-		if (GameManager.instance.soulDatas.Count > 4)
-		{
-			flag2 = true;
-		}
 		if (hookReturn)
 		{
 			HookshotReturn();
@@ -123,26 +131,50 @@ public class PlayerScript : MonoBehaviour
 			cam.GetComponent<MouseLook>().sensitivityX = sens;
 			cam.GetComponent<MouseLook>().sensitivityY = sens;
 		}
-		if (Input.GetButtonUp("Fire1") && !GameManager.instance.gamePaused && gunCharge >= 0.92f && !flag)
+		bool paused = GameManager.instance.gamePaused;
+		if (paused)
 		{
-			gunCharge = 0f;
-			PlayerFire(0, 10, 0.07f);
-			SoundManager.instance.PlaySingle("shootBig1", base.transform.position - Vector3.up, true);
-			vmAnim.Stop("Fire2R");
-			vmAnim.Play("Fire2R");
+			fireLocked = true;
 		}
-		if (Input.GetButton("Fire1") && !GameManager.instance.gamePaused && !flag)
+		else if (fireLocked && !Input.GetButton("Fire1") && !Input.GetButtonUp("Fire1"))
 		{
-			gunCharge -= Time.deltaTime * 1.5f;
-			float num = 0.1f;
-			if (gunCharge <= 0.1f)
+			fireLocked = false;
+		}
+		bool canFire = !paused && !fireLocked && !flag;
+		reloadLock -= Time.deltaTime;
+		bool reloading = reloadLock > 0f;
+		if (!Input.GetButton("Fire1") && !Input.GetButtonUp("Fire1"))
+		{
+			gunEmptied = false;
+		}
+		if (canFire && Input.GetButtonUp("Fire1"))
+		{
+			if (gunEmptied)
 			{
-				num += 0.1f;
+				gunEmptied = false;
+				gunCharge = 0f;
+				StartReload();
 			}
-			if (coolF1 >= num && gunCharge <= 0.92f)
+			else if (gunCharge >= 0.92f && !reloading)
+			{
+				gunCharge = 0f;
+				PlayerFire(0, 10, 0.07f, 1f);
+				SoundManager.instance.PlaySingle("shootBig1", base.transform.position - Vector3.up, true);
+				StartReload();
+			}
+		}
+		if (canFire && !reloading && Input.GetButton("Fire1") && !gunEmptied)
+		{
+			gunCharge -= Time.deltaTime * ((gunCharge > 0.92f) ? DrainStart : DrainHold);
+			if (gunCharge <= 0f)
+			{
+				gunCharge = 0f;
+				gunEmptied = true;
+			}
+			else if (coolF1 >= 0.1f && gunCharge <= 0.92f)
 			{
 				SoundManager.instance.PlaySingle("shootShort1", base.transform.position - Vector3.up, true);
-				PlayerFire(0, 1, 0.03f);
+				PlayerFire(0, 1, 0.03f, ShotDamageMult);
 				coolF1 = 0f;
 				vmAnim.Stop("FireR");
 				vmAnim.Play("FireR", PlayMode.StopSameLayer);
@@ -311,7 +343,7 @@ public class PlayerScript : MonoBehaviour
 		grabber.GetComponent<LineRenderer>().SetPosition(1, position2);
 	}
 
-	private void PlayerFire(int type, int shotCount, float inacc)
+	private void PlayerFire(int type, int shotCount, float inacc, float damageMult)
 	{
 		for (int i = 0; i < shotCount; i++)
 		{
@@ -322,7 +354,7 @@ public class PlayerScript : MonoBehaviour
 			Vector3 normalized = (cam.transform.forward.normalized + vector + vector2).normalized;
 			Vector3 vector3 = cam.transform.TransformPoint(GetComponent<GunScript>().localOrigin);
 			vector3 = firepnt.position;
-			GetComponent<GunScript>().FireProjectile(type, 500f, 1f, vector3, normalized, string.Empty);
+			GetComponent<GunScript>().FireProjectile(type, 500f, 1f, vector3, normalized, string.Empty, damageMult);
 		}
 		if (muzzleFX.Length > 0)
 		{
@@ -333,6 +365,65 @@ public class PlayerScript : MonoBehaviour
 			}
 			GameObject gameObject = UnityEngine.Object.Instantiate(muzzleFX[num3], firepnt.position, Quaternion.LookRotation(cam.transform.forward));
 			gameObject.transform.parent = firepnt;
+			if (shotCount > 1)
+			{
+				BrightenBlast(gameObject);
+			}
+		}
+	}
+
+	private void StartReload()
+	{
+		vmAnim.Stop("Fire2R");
+		vmAnim.Play("Fire2R");
+		reloadLock = Mathf.Clamp(vmAnim["Fire2R"].length, 0.3f, 1.5f);
+	}
+
+	private void BrightenBlast(GameObject fx)
+	{
+		ParticleSystem[] systems = fx.GetComponentsInChildren<ParticleSystem>(true);
+		foreach (ParticleSystem ps in systems)
+		{
+			ParticleSystem.MainModule main = ps.main;
+			ParticleSystem.MinMaxGradient startColor = main.startColor;
+			if (startColor.mode == ParticleSystemGradientMode.Color)
+			{
+				main.startColor = BrightenColor(startColor.color);
+			}
+			else if (startColor.mode == ParticleSystemGradientMode.TwoColors)
+			{
+				main.startColor = new ParticleSystem.MinMaxGradient(BrightenColor(startColor.colorMin), BrightenColor(startColor.colorMax));
+			}
+		}
+		Light[] lights = fx.GetComponentsInChildren<Light>(true);
+		foreach (Light fxLight in lights)
+		{
+			fxLight.intensity *= 1.6f;
+		}
+	}
+
+	private static Color BrightenColor(Color c)
+	{
+		Color result = Color.Lerp(c, new Color(1f, 0.93f, 0.7f), 0.65f);
+		result.a = Mathf.Clamp01(Mathf.Max(c.a, 0.9f));
+		return result;
+	}
+
+	private void LateUpdate()
+	{
+		// the second ability's chains are invisible; only the hook ball stays visible
+		LineRenderer own = GetComponent<LineRenderer>();
+		if (own != null)
+		{
+			own.enabled = false;
+		}
+		if (grabber != null)
+		{
+			LineRenderer grab = grabber.GetComponent<LineRenderer>();
+			if (grab != null)
+			{
+				grab.enabled = false;
+			}
 		}
 	}
 

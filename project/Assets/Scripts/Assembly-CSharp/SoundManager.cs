@@ -53,6 +53,33 @@ public class SoundManager : MonoBehaviour
 		}
 	}
 
+	public void PlayClip(AudioClip clip, Vector3 pos, float volume, bool randPitch)
+	{
+		if (clip == null || fxPrefab == null)
+		{
+			return;
+		}
+		GameObject gameObject = Object.Instantiate(fxPrefab, pos, Quaternion.identity);
+		if ((bool)GameObject.Find("_effects"))
+		{
+			gameObject.transform.parent = GameObject.Find("_effects").transform;
+		}
+		AudioSource component = gameObject.GetComponent<AudioSource>();
+		component.clip = clip;
+		float pitch = 1f;
+		if (randPitch)
+		{
+			pitch = Random.Range(0.9f, 1.1f);
+		}
+		component.pitch = pitch;
+		component.volume = fxVolume * volume;
+		if ((bool)gameObject.GetComponent<SelfDestruct>())
+		{
+			gameObject.GetComponent<SelfDestruct>().duration = clip.length / pitch + 0.1f;
+		}
+		component.Play();
+	}
+
 	public void PlaySingle(string soundName)
 	{
 		if (!(soundName == string.Empty))

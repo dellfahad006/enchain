@@ -46,11 +46,24 @@ public class ActivateTrigger : MonoBehaviour
 	[NonSerialized]
 	public bool triggered;
 
+	// pads no longer ask for specific chained enemies and their icon images are hidden
+	private const bool IgnoreSoulRequirements = true;
+
 	private void Start()
 	{
 		if (gameMan)
 		{
 			target = GameManager.instance;
+		}
+		if (IgnoreSoulRequirements && dataNeeded != 0)
+		{
+			foreach (Transform child in base.transform)
+			{
+				if (child.name.StartsWith("Plane"))
+				{
+					child.gameObject.SetActive(false);
+				}
+			}
 		}
 	}
 
@@ -154,7 +167,7 @@ public class ActivateTrigger : MonoBehaviour
 
 	private void OnTriggerEnter(Collider other)
 	{
-		if (other.tag == activator && !triggered && (dataNeeded == 0 || dataNeededAmt == 0 || GameManager.instance.SoulDataContainsAmt(dataNeeded) >= dataNeededAmt))
+		if (other.tag == activator && !triggered && (IgnoreSoulRequirements || dataNeeded == 0 || dataNeededAmt == 0 || GameManager.instance.SoulDataContainsAmt(dataNeeded) >= dataNeededAmt))
 		{
 			DoActivateTrigger();
 		}

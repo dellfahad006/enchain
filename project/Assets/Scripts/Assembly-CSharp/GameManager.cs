@@ -148,6 +148,23 @@ public class GameManager : MonoBehaviour
 
 	private bool resumeCheck;
 
+	private float deadTimer;
+
+	private List<Vector3> usedCheckpoints = new List<Vector3>();
+
+	private float cleanupTimer;
+
+	private GameObject crosshairObj;
+
+	// the most dead enemies you can carry; picking up another sends the oldest back
+	private const int MaxSouls = 4;
+
+	private const float RespawnDelay = 1f;
+
+	private const float CheckpointFadeDelay = 1f;
+
+	private const float CheckpointFadeTime = 0.8f;
+
 	private void Awake()
 	{
 		if (instance == null)
@@ -159,10 +176,16 @@ public class GameManager : MonoBehaviour
 			UnityEngine.Object.Destroy(base.gameObject);
 		}
 		UnityEngine.Object.DontDestroyOnLoad(base.gameObject);
+		if (instance == this && GetComponent<KeyboardMenu>() == null)
+		{
+			base.gameObject.AddComponent<KeyboardMenu>();
+		}
+		KillMusic();
 	}
 
 	private void Start()
 	{
+		KillMusic();
 		player = GameObject.FindGameObjectWithTag("Player");
 		sensPos = sensText.rectTransform.anchoredPosition;
 		panelPos = cardParents[0].anchoredPosition;
@@ -191,6 +214,9 @@ public class GameManager : MonoBehaviour
 
 	private void OnLevelWasLoaded(int level)
 	{
+		KillMusic();
+		crosshairObj = null;
+		deadTimer = 0f;
 		player = GameObject.FindGameObjectWithTag("Player");
 		if (player == null)
 		{
@@ -236,6 +262,7 @@ public class GameManager : MonoBehaviour
 			bossHp.transform.parent.gameObject.SetActive(false);
 		}
 		secretSetLvl();
+		HideUsedCheckpoints();
 	}
 
 
@@ -252,6 +279,7 @@ public class GameManager : MonoBehaviour
 		lvlTimer = Time.time - lvlTimeStart - lastCheckpntTime;
 		timerText.text = string.Format("{0:0}:{1:00}", Mathf.Floor(lvlTimer / 60f), lvlTimer % 60f);
 		gamePaused = GetComponent<CursorHideShow>().paused;
+		Housekeeping();
 		if (gamePaused)
 		{
 		}
@@ -267,11 +295,6 @@ public class GameManager : MonoBehaviour
 		if ((bool)bossHp && (bool)boss)
 		{
 			bossHp.sizeDelta = new Vector2((float)boss.currHP * 1f / (float)boss.hitPoints * 1f * bossStartW, bossHp.sizeDelta.y);
-		}
-		if (Input.GetKeyDown(KeyCode.M))
-		{
-			SoundManager.instance.PlaySingle("bump1");
-			GetComponent<AudioSource>().mute = !GetComponent<AudioSource>().mute;
 		}
 		if (Input.GetKeyDown(KeyCode.O))
 		{
@@ -343,16 +366,7 @@ public class GameManager : MonoBehaviour
 			hpBars[0].sizeDelta = new Vector2(hpBarScale.x * ((float)playerHP * 1f / (float)playerMaxHP * 1f), hpBarScale.y);
 			hpBars[1].GetComponent<Text>().text = playerHP + string.Empty;
 		}
-		if ((bool)player && player.GetComponent<PlayerScript>().gunCharge < 1f)
-		{
-			hpBars[2].transform.parent.gameObject.SetActive(true);
-			float gunCharge = player.GetComponent<PlayerScript>().gunCharge;
-			hpBars[2].sizeDelta = new Vector2(cBarScale.x * Mathf.Clamp01(gunCharge * 1f / 0.9f), cBarScale.y);
-		}
-		else
-		{
-			hpBars[2].transform.parent.gameObject.SetActive(false);
-		}
+		hpBars[2].transform.parent.gameObject.SetActive(false);
 		if (Input.GetKey(KeyCode.Alpha1) && cards.Count >= 1)
 		{
 			ReleaseSoul(1, true);
@@ -407,8 +421,22 @@ public class GameManager : MonoBehaviour
 				}
 			}
 		}
-		if ((gamePaused || playerDead) && Input.GetKeyDown(KeyCode.R))
+		bool restartNow = gamePaused && Input.GetKeyDown(KeyCode.R);
+		if (playerDead)
 		{
+			deadTimer += Time.unscaledDeltaTime;
+			if (deadTimer >= RespawnDelay)
+			{
+				restartNow = true;
+			}
+		}
+		else
+		{
+			deadTimer = 0f;
+		}
+		if (restartNow)
+		{
+			deadTimer = 0f;
 			if (!gamePaused)
 			{
 				GetComponent<CursorHideShow>().DOpause(true);
@@ -474,7 +502,6 @@ public class GameManager : MonoBehaviour
 			}
 			menu.titleOverlay.SetActive(false);
 			menu.inMenu = false;
-			GetComponent<AudioSource>().Play();
 		}
 		menu.menuState = state;
 	}
@@ -556,6 +583,7 @@ public class GameManager : MonoBehaviour
 		lvlEndMenu.SetActive(false);
 		checkpointObj = null;
 		checkpntPos = Vector3.zero;
+		usedCheckpoints = new List<Vector3>();
 		lastCheckpntTime = 0f;
 		lvlCheckpntTime = 0f;
 		playerHurt(false, true);
@@ -677,6 +705,10 @@ public class GameManager : MonoBehaviour
 		souls.Add(gameObject);
 		int item = int.Parse(obj.GetComponent<SoulData>().enID + string.Empty + obj.GetComponent<SoulData>().color);
 		soulDatas.Add(item);
+		if (cards.Count > MaxSouls && souls.Count > MaxSouls && soulledObjs.Count > MaxSouls && soulDatas.Count > MaxSouls)
+		{
+			ReturnSoul(0);
+		}
 	}
 
 	private void ReleaseSoul(int soulNum, bool doRel)
@@ -809,18 +841,126 @@ public class GameManager : MonoBehaviour
 
 	public void SetCheckpoint(GameObject go)
 	{
-		if ((bool)checkpointObj)
-		{
-			checkpointObj.GetComponent<ActivateTrigger>().triggered = false;
-			CheckpointCol(false, checkpointObj);
-		}
 		checkpointObj = go;
+		usedCheckpoints.Add(go.transform.position);
 		checkpntPos = checkpointObj.transform.position;
 		cpYrot = checkpointObj.transform.eulerAngles.y;
 		lvlCheckpntTime = lvlTimer;
 		player.GetComponent<Health>().HealAmt(100);
 		SoundManager.instance.PlaySingle("checkpoint1", checkpointObj.transform.position, true);
 		CheckpointCol(true, checkpointObj);
+		StartCoroutine(FadeCheckpoint(checkpointObj));
+	}
+
+	private System.Collections.IEnumerator FadeCheckpoint(GameObject cp)
+	{
+		float wait = CheckpointFadeDelay;
+		while (wait > 0f)
+		{
+			wait -= Time.deltaTime;
+			yield return null;
+		}
+		if (cp == null)
+		{
+			yield break;
+		}
+		Renderer[] renderers = cp.GetComponentsInChildren<Renderer>();
+		List<Material> mats = new List<Material>();
+		foreach (Renderer renderer in renderers)
+		{
+			if (renderer is ParticleSystemRenderer)
+			{
+				continue;
+			}
+			mats.Add(renderer.material);
+		}
+		ParticleSystem[] systems = cp.GetComponentsInChildren<ParticleSystem>();
+		foreach (ParticleSystem ps in systems)
+		{
+			ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+		}
+		List<float> startAlpha = new List<float>();
+		foreach (Material mat in mats)
+		{
+			startAlpha.Add(mat.HasProperty("_Color") ? mat.color.a : 1f);
+		}
+		float t = 0f;
+		while (t < CheckpointFadeTime)
+		{
+			t += Time.deltaTime;
+			float k = 1f - Mathf.Clamp01(t / CheckpointFadeTime);
+			for (int i = 0; i < mats.Count; i++)
+			{
+				if (mats[i] != null && mats[i].HasProperty("_Color"))
+				{
+					Color c = mats[i].color;
+					c.a = startAlpha[i] * k;
+					mats[i].color = c;
+				}
+			}
+			yield return null;
+		}
+		if (cp != null)
+		{
+			cp.SetActive(false);
+		}
+	}
+
+	private void KillMusic()
+	{
+		AudioSource[] sources = UnityEngine.Object.FindObjectsOfType<AudioSource>();
+		foreach (AudioSource source in sources)
+		{
+			if (source != null && source.clip != null && (source.clip.name == "LD40 01" || source.clip.name == "ld40 songFast"))
+			{
+				source.Stop();
+				source.mute = true;
+				source.volume = 0f;
+			}
+		}
+	}
+
+	private void Housekeeping()
+	{
+		cleanupTimer -= Time.unscaledDeltaTime;
+		if (cleanupTimer > 0f)
+		{
+			return;
+		}
+		cleanupTimer = 0.5f;
+		KillMusic();
+		if (crosshairObj == null)
+		{
+			crosshairObj = GameObject.Find("crosshair");
+		}
+		if (crosshairObj != null && crosshairObj.activeSelf)
+		{
+			crosshairObj.SetActive(false);
+		}
+	}
+
+	private void HideUsedCheckpoints()
+	{
+		if (usedCheckpoints.Count == 0)
+		{
+			return;
+		}
+		ActivateTrigger[] triggers = UnityEngine.Object.FindObjectsOfType<ActivateTrigger>();
+		foreach (ActivateTrigger trigger in triggers)
+		{
+			if (!trigger.gameObject.name.StartsWith("_checkpoint"))
+			{
+				continue;
+			}
+			foreach (Vector3 used in usedCheckpoints)
+			{
+				if (Vector3.Distance(trigger.transform.position, used) < 0.5f)
+				{
+					trigger.gameObject.SetActive(false);
+					break;
+				}
+			}
+		}
 	}
 
 	private void CheckpointCol(bool a, GameObject obj)
@@ -982,7 +1122,10 @@ public class GameManager : MonoBehaviour
 		}
 		if (die)
 		{
-			dieText.SetActive(a);
+			if ((bool)dieText)
+			{
+				dieText.SetActive(false);
+			}
 			playerDead = true;
 		}
 	}
