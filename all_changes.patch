@@ -1,0 +1,899 @@
+diff -ru orig/project/Assets/Scripts/Assembly-CSharp/ActivateTrigger.cs enchain-main/project/Assets/Scripts/Assembly-CSharp/ActivateTrigger.cs
+--- orig/project/Assets/Scripts/Assembly-CSharp/ActivateTrigger.cs	2026-11-22 20:00:53.869293758 +0000
++++ enchain-main/project/Assets/Scripts/Assembly-CSharp/ActivateTrigger.cs	2026-11-23 01:06:48.736145354 +0000
+@@ -46,12 +46,25 @@
+ 	[NonSerialized]
+ 	public bool triggered;
+ 
++	// pads no longer ask for specific chained enemies and their icon images are hidden
++	private const bool IgnoreSoulRequirements = true;
++
+ 	private void Start()
+ 	{
+ 		if (gameMan)
+ 		{
+ 			target = GameManager.instance;
+ 		}
++		if (IgnoreSoulRequirements && dataNeeded != 0)
++		{
++			foreach (Transform child in base.transform)
++			{
++				if (child.name.StartsWith("Plane"))
++				{
++					child.gameObject.SetActive(false);
++				}
++			}
++		}
+ 	}
+ 
+ 	private void DoActivateTrigger()
+@@ -154,7 +167,7 @@
+ 
+ 	private void OnTriggerEnter(Collider other)
+ 	{
+-		if (other.tag == activator && !triggered && (dataNeeded == 0 || dataNeededAmt == 0 || GameManager.instance.SoulDataContainsAmt(dataNeeded) >= dataNeededAmt))
++		if (other.tag == activator && !triggered && (IgnoreSoulRequirements || dataNeeded == 0 || dataNeededAmt == 0 || GameManager.instance.SoulDataContainsAmt(dataNeeded) >= dataNeededAmt))
+ 		{
+ 			DoActivateTrigger();
+ 		}
+diff -ru orig/project/Assets/Scripts/Assembly-CSharp/CursorHideShow.cs enchain-main/project/Assets/Scripts/Assembly-CSharp/CursorHideShow.cs
+--- orig/project/Assets/Scripts/Assembly-CSharp/CursorHideShow.cs	2026-11-22 20:00:53.869380482 +0000
++++ enchain-main/project/Assets/Scripts/Assembly-CSharp/CursorHideShow.cs	2026-11-22 20:01:01.750692175 +0000
+@@ -11,6 +11,8 @@
+ 
+         private bool isLocked;
+ 
++        private bool allowRelockOnClick = true;
++
+         public GameObject[] crosshairObjs;
+ 
+         private void Start()
+@@ -57,6 +59,7 @@
+ 
+         public void Unpause(bool lockCursor)
+         {
++                allowRelockOnClick = lockCursor;
+                 setCursorLock(lockCursor);
+                 pauseGame(false);
+         }
+@@ -69,12 +72,13 @@
+ 
+         private void Update()
+         {
+-                if (!paused && Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
++                if (!paused && allowRelockOnClick && Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+                 {
+                         setCursorLock(true);
+                 }
+                 if (Input.GetKeyUp(KeyCode.Escape) || (Input.GetKeyDown(KeyCode.P) && !paused))
+                 {
++                        allowRelockOnClick = true;
+                         setCursorLock(!isLocked);
+                         pauseGame(!paused);
+                 }
+diff -ru orig/project/Assets/Scripts/Assembly-CSharp/EnemyScript.cs enchain-main/project/Assets/Scripts/Assembly-CSharp/EnemyScript.cs
+--- orig/project/Assets/Scripts/Assembly-CSharp/EnemyScript.cs	2026-11-22 20:00:53.869436141 +0000
++++ enchain-main/project/Assets/Scripts/Assembly-CSharp/EnemyScript.cs	2026-11-23 01:04:41.796720477 +0000
+@@ -1,3 +1,4 @@
++using System.Collections.Generic;
+ using UnityEngine;
+ using UnityEngine.AI;
+ 
+@@ -65,6 +66,128 @@
+ 
+ 	private Animation anim;
+ 
++	// Project recovery renamed duplicate clip names to Idle_0, Idle_1, ...
++	// Register each such clip again under its original name so the code finds it.
++	private void AliasSuffixedClips()
++	{
++		if (anim == null)
++		{
++			return;
++		}
++		List<AnimationState> states = new List<AnimationState>();
++		foreach (AnimationState state in anim)
++		{
++			states.Add(state);
++		}
++		foreach (AnimationState state2 in states)
++		{
++			string stateName = state2.name;
++			int underscore = stateName.LastIndexOf('_');
++			if (underscore <= 0 || underscore == stateName.Length - 1)
++			{
++				continue;
++			}
++			bool allDigits = true;
++			for (int i = underscore + 1; i < stateName.Length; i++)
++			{
++				if (!char.IsDigit(stateName[i]))
++				{
++					allDigits = false;
++					break;
++				}
++			}
++			if (!allDigits)
++			{
++				continue;
++			}
++			string baseName = stateName.Substring(0, underscore);
++			if (anim.GetClip(baseName) == null && state2.clip != null)
++			{
++				anim.AddClip(state2.clip, baseName);
++			}
++		}
++	}
++
++	private float mutterTimer = -1f;
++
++	private bool stunSfxPlayed;
++
++	// extra procedural enemy sounds: idle mutters and a stun zap
++	private void UpdateExtraSounds()
++	{
++		if (dead || SoundManager.instance == null)
++		{
++			return;
++		}
++		Health health = GetComponent<Health>();
++		bool stunnedNow = health != null && health.stunned;
++		if (stunnedNow && !stunSfxPlayed)
++		{
++			stunSfxPlayed = true;
++			SoundManager.instance.PlayClip(ProcSfx.Get("zap"), base.transform.position, 0.9f, true);
++		}
++		else if (!stunnedNow)
++		{
++			stunSfxPlayed = false;
++		}
++		if (stunnedNow || player == null)
++		{
++			return;
++		}
++		if (mutterTimer < 0f)
++		{
++			mutterTimer = Random.Range(2f, 8f);
++		}
++		if (Vector3.Distance(base.transform.position, player.position) > 20f)
++		{
++			return;
++		}
++		mutterTimer -= Time.deltaTime;
++		if (mutterTimer <= 0f)
++		{
++			mutterTimer = Random.Range(5f, 11f);
++			SoundManager.instance.PlayClip(ProcSfx.Get("mutter"), base.transform.position, 0.4f, true);
++		}
++	}
++
++	private bool HasClip(string clipName)
++	{
++		return anim != null && anim.GetClip(clipName) != null;
++	}
++
++	private HashSet<string> warnedClips = new HashSet<string>();
++
++	private void WarnMissing(string clipName)
++	{
++		if (warnedClips.Add(clipName))
++		{
++			string have = "";
++			if (anim != null)
++			{
++				foreach (AnimationState state in anim)
++				{
++					have += state.name + ", ";
++				}
++			}
++			Debug.LogWarning("[Enchain] '" + name + "' (class " + enemyClass + ") has no clip '" + clipName + "'. Has: " + have);
++		}
++	}
++
++	private void SafePlay(string clipName)
++	{
++		if (HasClip(clipName)) { anim.Play(clipName); } else { WarnMissing(clipName); }
++	}
++
++	private void SafeCrossFade(string clipName, float fade)
++	{
++		if (HasClip(clipName)) { anim.CrossFade(clipName, fade); } else { WarnMissing(clipName); }
++	}
++
++	private void SafeBlend(string clipName)
++	{
++		if (HasClip(clipName)) { anim.Blend(clipName); } else { WarnMissing(clipName); }
++	}
++
+ 	private void Start()
+ 	{
+ 		player = GameObject.FindGameObjectWithTag("Player").transform;
+@@ -74,23 +197,21 @@
+ 		if ((bool)GetComponentInChildren<Animation>())
+ 		{
+ 			anim = GetComponentInChildren<Animation>();
+-			anim[animStates[0]].speed = Random.Range(0.95f, 1.05f);
++			AliasSuffixedClips();
++			if (HasClip(animStates[0])) { anim[animStates[0]].speed = Random.Range(0.95f, 1.05f); }
+ 			if ((bool)mixingBone)
+ 			{
+-				anim["Swing1"].AddMixingTransform(mixingBone);
+-				anim["Swing1"].layer = 1;
+-				anim["Cry"].AddMixingTransform(mixingBone);
+-				anim["Cry"].layer = 1;
+-				anim["Hurt1"].AddMixingTransform(mixingBone);
+-				anim["Hurt1"].layer = 1;
+-				anim["Hurt2"].AddMixingTransform(mixingBone);
+-				anim["Hurt2"].layer = 1;
++				if (HasClip("Swing1")) { anim["Swing1"].AddMixingTransform(mixingBone); anim["Swing1"].layer = 1; }
++				if (HasClip("Cry")) { anim["Cry"].AddMixingTransform(mixingBone); anim["Cry"].layer = 1; }
++				if (HasClip("Hurt1")) { anim["Hurt1"].AddMixingTransform(mixingBone); anim["Hurt1"].layer = 1; }
++				if (HasClip("Hurt2")) { anim["Hurt2"].AddMixingTransform(mixingBone); anim["Hurt2"].layer = 1; }
+ 			}
+ 		}
+ 	}
+ 
+ 	private void Update()
+ 	{
++		UpdateExtraSounds();
+ 		if (enemyClass == 0 || enemyClass == 1)
+ 		{
+ 			if (lookOnSight && (bool)player && InSight(player) && !GetComponent<Health>().stunned)
+@@ -103,9 +224,13 @@
+ 					shootTimer = 0f;
+ 					if ((bool)anim)
+ 					{
+-						anim.Play("Spot");
++						SafePlay("Spot");
+ 					}
+ 					SoundManager.instance.PlaySingle(crySound, base.transform.position, true);
++					if (Random.value < 0.5f)
++					{
++						SoundManager.instance.PlayClip(ProcSfx.Get("alert"), base.transform.position, 0.8f, true);
++					}
+ 				}
+ 				sightTime = 0f;
+ 				LookToggle(true);
+@@ -134,7 +259,7 @@
+ 						{
+ 							if (!dashed)
+ 							{
+-								anim.Play("Dash");
++								SafePlay("Dash");
+ 								dashed = true;
+ 								SoundManager.instance.PlaySingle("dashSound", base.transform.position, true);
+ 								rb.AddForce(normalized * moveForce * 60f);
+@@ -177,11 +302,11 @@
+ 			}
+ 			if ((bool)anim && !anim.IsPlaying("Spot") && !anim.IsPlaying("Stun") && !anim.IsPlaying("Dash"))
+ 			{
+-				anim.Play(animStates[0]);
++				SafePlay(animStates[0]);
+ 			}
+ 			if (GetComponent<Health>().stunned && (bool)anim)
+ 			{
+-				anim.Play("Stun");
++				SafePlay("Stun");
+ 			}
+ 		}
+ 		if (enemyClass == 2 && !dead)
+@@ -191,20 +316,20 @@
+ 			hurtCooldown -= Time.deltaTime;
+ 			if (component.velocity.magnitude > 1f)
+ 			{
+-				anim[animStates[1]].speed = component.velocity.magnitude / component.speed;
+-				anim.CrossFade(animStates[1], 0.5f);
++				if (HasClip(animStates[1])) { anim[animStates[1]].speed = component.velocity.magnitude / component.speed; }
++				SafeCrossFade(animStates[1], 0.5f);
+ 			}
+ 			if ((bool)player && InSight(player) && !anim.IsPlaying("Attack1") && Vector3.Distance(base.transform.position, player.position) < 7.5f)
+ 			{
+ 				swingLR.time = 0.3f;
+-				anim.Blend("Swing1");
++				SafeBlend("Swing1");
+ 				cryCooldown = 2f;
+ 			}
+ 			if ((bool)player && InSight(player) && (Vector3.Distance(base.transform.position, player.position) > 16f || anim.IsPlaying("Attack1")) && swingCooldown < 0f)
+ 			{
+ 				swingLR.time = 0.3f;
+-				anim.CrossFade("Attack1", 0.2f);
+-				if (anim["Attack1"].time >= 2f)
++				SafeCrossFade("Attack1", 0.2f);
++				if (HasClip("Attack1") && anim["Attack1"].time >= 2f)
+ 				{
+ 					swingCooldown = 6f;
+ 				}
+@@ -212,7 +337,7 @@
+ 			}
+ 			if ((bool)player && InSight(player) && cryCooldown < 0f && !anim.IsPlaying("Attack1") && !anim.IsPlaying("Swing1"))
+ 			{
+-				anim.Blend("Cry");
++				SafeBlend("Cry");
+ 				if ((bool)SoundManager.instance)
+ 				{
+ 					SoundManager.instance.PlaySingle("cryB2", base.transform.position, true);
+@@ -221,7 +346,7 @@
+ 			}
+ 			if ((bool)anim && !anim.IsPlaying("Attack1") && component.velocity.magnitude < 1f)
+ 			{
+-				anim.CrossFade(animStates[0], 0.6f);
++				SafeCrossFade(animStates[0], 0.6f);
+ 			}
+ 			if (!anim.IsPlaying("Attack1") && !anim.IsPlaying("Swing1"))
+ 			{
+@@ -335,7 +460,7 @@
+ 	{
+ 		if ((bool)anim && !anim.IsPlaying("Attack1") && !anim.IsPlaying("Swing1") && !anim.IsPlaying("Cry") && hurtCooldown <= 0f)
+ 		{
+-			anim.Blend("Hurt" + Random.Range(1, 3));
++			SafeBlend("Hurt" + Random.Range(1, 3));
+ 			if ((bool)SoundManager.instance)
+ 			{
+ 				SoundManager.instance.PlaySingle("cryHurt", base.transform.position, true);
+@@ -369,7 +494,7 @@
+ 		{
+ 			SoundManager.instance.PlaySingle("cryDie", base.transform.position, true);
+ 		}
+-		anim.CrossFade("Death", 0.1f);
++		SafeCrossFade("Death", 0.1f);
+ 		dead = true;
+ 	}
+ }
+diff -ru orig/project/Assets/Scripts/Assembly-CSharp/GameManager.cs enchain-main/project/Assets/Scripts/Assembly-CSharp/GameManager.cs
+--- orig/project/Assets/Scripts/Assembly-CSharp/GameManager.cs	2026-11-22 20:00:53.869499861 +0000
++++ enchain-main/project/Assets/Scripts/Assembly-CSharp/GameManager.cs	2026-11-23 01:06:31.043592817 +0000
+@@ -148,6 +148,23 @@
+ 
+ 	private bool resumeCheck;
+ 
++	private float deadTimer;
++
++	private List<Vector3> usedCheckpoints = new List<Vector3>();
++
++	private float cleanupTimer;
++
++	private GameObject crosshairObj;
++
++	// the most dead enemies you can carry; picking up another sends the oldest back
++	private const int MaxSouls = 4;
++
++	private const float RespawnDelay = 1f;
++
++	private const float CheckpointFadeDelay = 1f;
++
++	private const float CheckpointFadeTime = 0.8f;
++
+ 	private void Awake()
+ 	{
+ 		if (instance == null)
+@@ -159,10 +176,16 @@
+ 			UnityEngine.Object.Destroy(base.gameObject);
+ 		}
+ 		UnityEngine.Object.DontDestroyOnLoad(base.gameObject);
++		if (instance == this && GetComponent<KeyboardMenu>() == null)
++		{
++			base.gameObject.AddComponent<KeyboardMenu>();
++		}
++		KillMusic();
+ 	}
+ 
+ 	private void Start()
+ 	{
++		KillMusic();
+ 		player = GameObject.FindGameObjectWithTag("Player");
+ 		sensPos = sensText.rectTransform.anchoredPosition;
+ 		panelPos = cardParents[0].anchoredPosition;
+@@ -191,6 +214,9 @@
+ 
+ 	private void OnLevelWasLoaded(int level)
+ 	{
++		KillMusic();
++		crosshairObj = null;
++		deadTimer = 0f;
+ 		player = GameObject.FindGameObjectWithTag("Player");
+ 		if (player == null)
+ 		{
+@@ -236,6 +262,7 @@
+ 			bossHp.transform.parent.gameObject.SetActive(false);
+ 		}
+ 		secretSetLvl();
++		HideUsedCheckpoints();
+ 	}
+ 
+ 
+@@ -252,6 +279,7 @@
+ 		lvlTimer = Time.time - lvlTimeStart - lastCheckpntTime;
+ 		timerText.text = string.Format("{0:0}:{1:00}", Mathf.Floor(lvlTimer / 60f), lvlTimer % 60f);
+ 		gamePaused = GetComponent<CursorHideShow>().paused;
++		Housekeeping();
+ 		if (gamePaused)
+ 		{
+ 		}
+@@ -268,11 +296,6 @@
+ 		{
+ 			bossHp.sizeDelta = new Vector2((float)boss.currHP * 1f / (float)boss.hitPoints * 1f * bossStartW, bossHp.sizeDelta.y);
+ 		}
+-		if (Input.GetKeyDown(KeyCode.M))
+-		{
+-			SoundManager.instance.PlaySingle("bump1");
+-			GetComponent<AudioSource>().mute = !GetComponent<AudioSource>().mute;
+-		}
+ 		if (Input.GetKeyDown(KeyCode.O))
+ 		{
+ 		}
+@@ -343,16 +366,7 @@
+ 			hpBars[0].sizeDelta = new Vector2(hpBarScale.x * ((float)playerHP * 1f / (float)playerMaxHP * 1f), hpBarScale.y);
+ 			hpBars[1].GetComponent<Text>().text = playerHP + string.Empty;
+ 		}
+-		if ((bool)player && player.GetComponent<PlayerScript>().gunCharge < 1f)
+-		{
+-			hpBars[2].transform.parent.gameObject.SetActive(true);
+-			float gunCharge = player.GetComponent<PlayerScript>().gunCharge;
+-			hpBars[2].sizeDelta = new Vector2(cBarScale.x * Mathf.Clamp01(gunCharge * 1f / 0.9f), cBarScale.y);
+-		}
+-		else
+-		{
+-			hpBars[2].transform.parent.gameObject.SetActive(false);
+-		}
++		hpBars[2].transform.parent.gameObject.SetActive(false);
+ 		if (Input.GetKey(KeyCode.Alpha1) && cards.Count >= 1)
+ 		{
+ 			ReleaseSoul(1, true);
+@@ -407,8 +421,22 @@
+ 				}
+ 			}
+ 		}
+-		if ((gamePaused || playerDead) && Input.GetKeyDown(KeyCode.R))
++		bool restartNow = gamePaused && Input.GetKeyDown(KeyCode.R);
++		if (playerDead)
++		{
++			deadTimer += Time.unscaledDeltaTime;
++			if (deadTimer >= RespawnDelay)
++			{
++				restartNow = true;
++			}
++		}
++		else
++		{
++			deadTimer = 0f;
++		}
++		if (restartNow)
+ 		{
++			deadTimer = 0f;
+ 			if (!gamePaused)
+ 			{
+ 				GetComponent<CursorHideShow>().DOpause(true);
+@@ -474,7 +502,6 @@
+ 			}
+ 			menu.titleOverlay.SetActive(false);
+ 			menu.inMenu = false;
+-			GetComponent<AudioSource>().Play();
+ 		}
+ 		menu.menuState = state;
+ 	}
+@@ -556,6 +583,7 @@
+ 		lvlEndMenu.SetActive(false);
+ 		checkpointObj = null;
+ 		checkpntPos = Vector3.zero;
++		usedCheckpoints = new List<Vector3>();
+ 		lastCheckpntTime = 0f;
+ 		lvlCheckpntTime = 0f;
+ 		playerHurt(false, true);
+@@ -677,6 +705,10 @@
+ 		souls.Add(gameObject);
+ 		int item = int.Parse(obj.GetComponent<SoulData>().enID + string.Empty + obj.GetComponent<SoulData>().color);
+ 		soulDatas.Add(item);
++		if (cards.Count > MaxSouls && souls.Count > MaxSouls && soulledObjs.Count > MaxSouls && soulDatas.Count > MaxSouls)
++		{
++			ReturnSoul(0);
++		}
+ 	}
+ 
+ 	private void ReleaseSoul(int soulNum, bool doRel)
+@@ -809,18 +841,126 @@
+ 
+ 	public void SetCheckpoint(GameObject go)
+ 	{
+-		if ((bool)checkpointObj)
+-		{
+-			checkpointObj.GetComponent<ActivateTrigger>().triggered = false;
+-			CheckpointCol(false, checkpointObj);
+-		}
+ 		checkpointObj = go;
++		usedCheckpoints.Add(go.transform.position);
+ 		checkpntPos = checkpointObj.transform.position;
+ 		cpYrot = checkpointObj.transform.eulerAngles.y;
+ 		lvlCheckpntTime = lvlTimer;
+ 		player.GetComponent<Health>().HealAmt(100);
+ 		SoundManager.instance.PlaySingle("checkpoint1", checkpointObj.transform.position, true);
+ 		CheckpointCol(true, checkpointObj);
++		StartCoroutine(FadeCheckpoint(checkpointObj));
++	}
++
++	private System.Collections.IEnumerator FadeCheckpoint(GameObject cp)
++	{
++		float wait = CheckpointFadeDelay;
++		while (wait > 0f)
++		{
++			wait -= Time.deltaTime;
++			yield return null;
++		}
++		if (cp == null)
++		{
++			yield break;
++		}
++		Renderer[] renderers = cp.GetComponentsInChildren<Renderer>();
++		List<Material> mats = new List<Material>();
++		foreach (Renderer renderer in renderers)
++		{
++			if (renderer is ParticleSystemRenderer)
++			{
++				continue;
++			}
++			mats.Add(renderer.material);
++		}
++		ParticleSystem[] systems = cp.GetComponentsInChildren<ParticleSystem>();
++		foreach (ParticleSystem ps in systems)
++		{
++			ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
++		}
++		List<float> startAlpha = new List<float>();
++		foreach (Material mat in mats)
++		{
++			startAlpha.Add(mat.HasProperty("_Color") ? mat.color.a : 1f);
++		}
++		float t = 0f;
++		while (t < CheckpointFadeTime)
++		{
++			t += Time.deltaTime;
++			float k = 1f - Mathf.Clamp01(t / CheckpointFadeTime);
++			for (int i = 0; i < mats.Count; i++)
++			{
++				if (mats[i] != null && mats[i].HasProperty("_Color"))
++				{
++					Color c = mats[i].color;
++					c.a = startAlpha[i] * k;
++					mats[i].color = c;
++				}
++			}
++			yield return null;
++		}
++		if (cp != null)
++		{
++			cp.SetActive(false);
++		}
++	}
++
++	private void KillMusic()
++	{
++		AudioSource[] sources = UnityEngine.Object.FindObjectsOfType<AudioSource>();
++		foreach (AudioSource source in sources)
++		{
++			if (source != null && source.clip != null && (source.clip.name == "LD40 01" || source.clip.name == "ld40 songFast"))
++			{
++				source.Stop();
++				source.mute = true;
++				source.volume = 0f;
++			}
++		}
++	}
++
++	private void Housekeeping()
++	{
++		cleanupTimer -= Time.unscaledDeltaTime;
++		if (cleanupTimer > 0f)
++		{
++			return;
++		}
++		cleanupTimer = 0.5f;
++		KillMusic();
++		if (crosshairObj == null)
++		{
++			crosshairObj = GameObject.Find("crosshair");
++		}
++		if (crosshairObj != null && crosshairObj.activeSelf)
++		{
++			crosshairObj.SetActive(false);
++		}
++	}
++
++	private void HideUsedCheckpoints()
++	{
++		if (usedCheckpoints.Count == 0)
++		{
++			return;
++		}
++		ActivateTrigger[] triggers = UnityEngine.Object.FindObjectsOfType<ActivateTrigger>();
++		foreach (ActivateTrigger trigger in triggers)
++		{
++			if (!trigger.gameObject.name.StartsWith("_checkpoint"))
++			{
++				continue;
++			}
++			foreach (Vector3 used in usedCheckpoints)
++			{
++				if (Vector3.Distance(trigger.transform.position, used) < 0.5f)
++				{
++					trigger.gameObject.SetActive(false);
++					break;
++				}
++			}
++		}
+ 	}
+ 
+ 	private void CheckpointCol(bool a, GameObject obj)
+@@ -982,7 +1122,10 @@
+ 		}
+ 		if (die)
+ 		{
+-			dieText.SetActive(a);
++			if ((bool)dieText)
++			{
++				dieText.SetActive(false);
++			}
+ 			playerDead = true;
+ 		}
+ 	}
+diff -ru orig/project/Assets/Scripts/Assembly-CSharp/GunScript.cs enchain-main/project/Assets/Scripts/Assembly-CSharp/GunScript.cs
+--- orig/project/Assets/Scripts/Assembly-CSharp/GunScript.cs	2026-11-22 20:00:53.869551443 +0000
++++ enchain-main/project/Assets/Scripts/Assembly-CSharp/GunScript.cs	2026-11-23 01:05:44.401388227 +0000
+@@ -16,7 +16,7 @@
+ 	{
+ 	}
+ 
+-	public void FireProjectile(int item, float force, float scale, Vector3 origin, Vector3 dir, string sound)
++	public void FireProjectile(int item, float force, float scale, Vector3 origin, Vector3 dir, string sound, float damageMult = 1f)
+ 	{
+ 		Vector3 position = origin + base.transform.TransformDirection(localOrigin);
+ 		if (overrideOrigin)
+@@ -30,6 +30,14 @@
+ 			gameObject.transform.parent = GameObject.Find("_effects").transform;
+ 		}
+ 		gameObject.transform.localScale *= scale;
++		if (damageMult != 1f)
++		{
++			CollisionCheck hitCheck = gameObject.GetComponentInChildren<CollisionCheck>();
++			if (hitCheck != null)
++			{
++				hitCheck.baseDamage = Mathf.Max(1, Mathf.RoundToInt((float)hitCheck.baseDamage * damageMult));
++			}
++		}
+ 		Physics.IgnoreCollision(gameObject.GetComponent<Collider>(), base.gameObject.GetComponent<Collider>(), true);
+ 		Rigidbody component = gameObject.GetComponent<Rigidbody>();
+ 		component.velocity = Vector3.zero;
+Only in enchain-main/project/Assets/Scripts/Assembly-CSharp: KeyboardMenu.cs
+diff -ru orig/project/Assets/Scripts/Assembly-CSharp/PlayerScript.cs enchain-main/project/Assets/Scripts/Assembly-CSharp/PlayerScript.cs
+--- orig/project/Assets/Scripts/Assembly-CSharp/PlayerScript.cs	2026-11-22 20:00:53.869721092 +0000
++++ enchain-main/project/Assets/Scripts/Assembly-CSharp/PlayerScript.cs	2026-11-23 01:05:55.232825690 +0000
+@@ -56,6 +56,21 @@
+ 
+ 	private bool charged = true;
+ 
++	// --- gun rework state ---
++	private bool fireLocked = true;
++
++	private bool gunEmptied;
++
++	private float reloadLock;
++
++	// short shots do 50% more damage to make up for the 30% smaller bar
++	private const float ShotDamageMult = 1.5f;
++
++	// 1.5 = original drain. After the first 0.08 of charge the bar drains faster (30% shorter hold)
++	private const float DrainStart = 1.5f;
++
++	private const float DrainHold = 1.714f;
++
+ 	[NonSerialized]
+ 	public float sens = 10f;
+ 
+@@ -72,6 +87,7 @@
+ 	private void Start()
+ 	{
+ 		cam = GetComponentInChildren<Camera>();
++		grappleRadius = Mathf.Min(grappleRadius, 0.15f);
+ 		cjA = GetComponent<ConfigurableJoint>();
+ 		cjB = grabber.GetComponent<ConfigurableJoint>();
+ 		Vector3 vector = grabber.transform.localPosition + grabber.GetComponent<LineRenderer>().GetPosition(0);
+@@ -99,15 +115,7 @@
+ 		gunCharge += Time.deltaTime;
+ 		gunCharge = Mathf.Clamp01(gunCharge);
+ 		bool flag = false;
+-		if ((bool)GameManager.instance && GameManager.instance.soulDatas.Count > 4)
+-		{
+-			flag = true;
+-		}
+ 		bool flag2 = false;
+-		if (GameManager.instance.soulDatas.Count > 4)
+-		{
+-			flag2 = true;
+-		}
+ 		if (hookReturn)
+ 		{
+ 			HookshotReturn();
+@@ -123,26 +131,50 @@
+ 			cam.GetComponent<MouseLook>().sensitivityX = sens;
+ 			cam.GetComponent<MouseLook>().sensitivityY = sens;
+ 		}
+-		if (Input.GetButtonUp("Fire1") && !GameManager.instance.gamePaused && gunCharge >= 0.92f && !flag)
++		bool paused = GameManager.instance.gamePaused;
++		if (paused)
+ 		{
+-			gunCharge = 0f;
+-			PlayerFire(0, 10, 0.07f);
+-			SoundManager.instance.PlaySingle("shootBig1", base.transform.position - Vector3.up, true);
+-			vmAnim.Stop("Fire2R");
+-			vmAnim.Play("Fire2R");
++			fireLocked = true;
+ 		}
+-		if (Input.GetButton("Fire1") && !GameManager.instance.gamePaused && !flag)
++		else if (fireLocked && !Input.GetButton("Fire1") && !Input.GetButtonUp("Fire1"))
+ 		{
+-			gunCharge -= Time.deltaTime * 1.5f;
+-			float num = 0.1f;
+-			if (gunCharge <= 0.1f)
++			fireLocked = false;
++		}
++		bool canFire = !paused && !fireLocked && !flag;
++		reloadLock -= Time.deltaTime;
++		bool reloading = reloadLock > 0f;
++		if (!Input.GetButton("Fire1") && !Input.GetButtonUp("Fire1"))
++		{
++			gunEmptied = false;
++		}
++		if (canFire && Input.GetButtonUp("Fire1"))
++		{
++			if (gunEmptied)
++			{
++				gunEmptied = false;
++				gunCharge = 0f;
++				StartReload();
++			}
++			else if (gunCharge >= 0.92f && !reloading)
++			{
++				gunCharge = 0f;
++				PlayerFire(0, 10, 0.07f, 1f);
++				SoundManager.instance.PlaySingle("shootBig1", base.transform.position - Vector3.up, true);
++				StartReload();
++			}
++		}
++		if (canFire && !reloading && Input.GetButton("Fire1") && !gunEmptied)
++		{
++			gunCharge -= Time.deltaTime * ((gunCharge > 0.92f) ? DrainStart : DrainHold);
++			if (gunCharge <= 0f)
+ 			{
+-				num += 0.1f;
++				gunCharge = 0f;
++				gunEmptied = true;
+ 			}
+-			if (coolF1 >= num && gunCharge <= 0.92f)
++			else if (coolF1 >= 0.1f && gunCharge <= 0.92f)
+ 			{
+ 				SoundManager.instance.PlaySingle("shootShort1", base.transform.position - Vector3.up, true);
+-				PlayerFire(0, 1, 0.03f);
++				PlayerFire(0, 1, 0.03f, ShotDamageMult);
+ 				coolF1 = 0f;
+ 				vmAnim.Stop("FireR");
+ 				vmAnim.Play("FireR", PlayMode.StopSameLayer);
+@@ -311,7 +343,7 @@
+ 		grabber.GetComponent<LineRenderer>().SetPosition(1, position2);
+ 	}
+ 
+-	private void PlayerFire(int type, int shotCount, float inacc)
++	private void PlayerFire(int type, int shotCount, float inacc, float damageMult)
+ 	{
+ 		for (int i = 0; i < shotCount; i++)
+ 		{
+@@ -322,7 +354,7 @@
+ 			Vector3 normalized = (cam.transform.forward.normalized + vector + vector2).normalized;
+ 			Vector3 vector3 = cam.transform.TransformPoint(GetComponent<GunScript>().localOrigin);
+ 			vector3 = firepnt.position;
+-			GetComponent<GunScript>().FireProjectile(type, 500f, 1f, vector3, normalized, string.Empty);
++			GetComponent<GunScript>().FireProjectile(type, 500f, 1f, vector3, normalized, string.Empty, damageMult);
+ 		}
+ 		if (muzzleFX.Length > 0)
+ 		{
+@@ -333,6 +365,65 @@
+ 			}
+ 			GameObject gameObject = UnityEngine.Object.Instantiate(muzzleFX[num3], firepnt.position, Quaternion.LookRotation(cam.transform.forward));
+ 			gameObject.transform.parent = firepnt;
++			if (shotCount > 1)
++			{
++				BrightenBlast(gameObject);
++			}
++		}
++	}
++
++	private void StartReload()
++	{
++		vmAnim.Stop("Fire2R");
++		vmAnim.Play("Fire2R");
++		reloadLock = Mathf.Clamp(vmAnim["Fire2R"].length, 0.3f, 1.5f);
++	}
++
++	private void BrightenBlast(GameObject fx)
++	{
++		ParticleSystem[] systems = fx.GetComponentsInChildren<ParticleSystem>(true);
++		foreach (ParticleSystem ps in systems)
++		{
++			ParticleSystem.MainModule main = ps.main;
++			ParticleSystem.MinMaxGradient startColor = main.startColor;
++			if (startColor.mode == ParticleSystemGradientMode.Color)
++			{
++				main.startColor = BrightenColor(startColor.color);
++			}
++			else if (startColor.mode == ParticleSystemGradientMode.TwoColors)
++			{
++				main.startColor = new ParticleSystem.MinMaxGradient(BrightenColor(startColor.colorMin), BrightenColor(startColor.colorMax));
++			}
++		}
++		Light[] lights = fx.GetComponentsInChildren<Light>(true);
++		foreach (Light fxLight in lights)
++		{
++			fxLight.intensity *= 1.6f;
++		}
++	}
++
++	private static Color BrightenColor(Color c)
++	{
++		Color result = Color.Lerp(c, new Color(1f, 0.93f, 0.7f), 0.65f);
++		result.a = Mathf.Clamp01(Mathf.Max(c.a, 0.9f));
++		return result;
++	}
++
++	private void LateUpdate()
++	{
++		// the second ability's chains are invisible; only the hook ball stays visible
++		LineRenderer own = GetComponent<LineRenderer>();
++		if (own != null)
++		{
++			own.enabled = false;
++		}
++		if (grabber != null)
++		{
++			LineRenderer grab = grabber.GetComponent<LineRenderer>();
++			if (grab != null)
++			{
++				grab.enabled = false;
++			}
+ 		}
+ 	}
+ 
+Only in enchain-main/project/Assets/Scripts/Assembly-CSharp: ProcSfx.cs
+diff -ru orig/project/Assets/Scripts/Assembly-CSharp/SoundManager.cs enchain-main/project/Assets/Scripts/Assembly-CSharp/SoundManager.cs
+--- orig/project/Assets/Scripts/Assembly-CSharp/SoundManager.cs	2026-11-22 20:00:53.869833087 +0000
++++ enchain-main/project/Assets/Scripts/Assembly-CSharp/SoundManager.cs	2026-11-23 01:04:29.804326671 +0000
+@@ -53,6 +53,33 @@
+ 		}
+ 	}
+ 
++	public void PlayClip(AudioClip clip, Vector3 pos, float volume, bool randPitch)
++	{
++		if (clip == null || fxPrefab == null)
++		{
++			return;
++		}
++		GameObject gameObject = Object.Instantiate(fxPrefab, pos, Quaternion.identity);
++		if ((bool)GameObject.Find("_effects"))
++		{
++			gameObject.transform.parent = GameObject.Find("_effects").transform;
++		}
++		AudioSource component = gameObject.GetComponent<AudioSource>();
++		component.clip = clip;
++		float pitch = 1f;
++		if (randPitch)
++		{
++			pitch = Random.Range(0.9f, 1.1f);
++		}
++		component.pitch = pitch;
++		component.volume = fxVolume * volume;
++		if ((bool)gameObject.GetComponent<SelfDestruct>())
++		{
++			gameObject.GetComponent<SelfDestruct>().duration = clip.length / pitch + 0.1f;
++		}
++		component.Play();
++	}
++
+ 	public void PlaySingle(string soundName)
+ 	{
+ 		if (!(soundName == string.Empty))
